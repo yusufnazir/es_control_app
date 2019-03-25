@@ -29,6 +29,7 @@ dependencies:
   flutter_webview_plugin: ^0.3.0+2
   url_launcher: ^5.0.1
   http: ^0.12.0 #import the HTTP package using this line
+  progress_hud_v2: ^2.0.0
 
 dev_dependencies:
   flutter_test:

@@ -6,6 +6,7 @@ import 'package:es_control_app/login/LoginPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:splashscreen/splashscreen.dart';
+import 'package:es_control_app/surveys_listing_page.dart';
 
 void main() {
   runApp(new MaterialApp(
@@ -20,7 +21,8 @@ void main() {
     home: new MyApp(),
     routes: {
       '/login': (context) => LoginPage(),
-      '/home': (context) => Home()
+      '/home': (context) => Home(),
+      '/surveys':(context) => SurveysListingPage()
     },
   ));
 }
@@ -36,8 +38,8 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return new SplashScreen(
-        seconds: 5,
-        navigateAfterSeconds: new LoginPage(),
+        seconds: 1,
+        navigateAfterSeconds: new SurveysListingPage(),
         title: new Text(
           'Welcome In SplashScreen',
           style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),

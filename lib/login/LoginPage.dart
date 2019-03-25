@@ -8,6 +8,7 @@ import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'FormType.dart';
+import 'package:es_control_app/rest/survey_rest_api.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -141,12 +142,17 @@ class _LoginPageState extends State<LoginPage> {
 
   void _loginPressed() {
     print('The user wants to login with $_email and $_password');
-    getQuote();
+//    getQuote();
+    getSurveysFromServer();
 //    _launchURL();
 //    Navigator.push(
 //      context,
 //      MaterialPageRoute(builder: (context) => Home()),
 //    );
+  }
+
+  getSurveysFromServer(){
+      RestApi().getSurveysFromServerAndStoreInDB();
   }
 
   _launchURL() async {
