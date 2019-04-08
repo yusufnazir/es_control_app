@@ -2,11 +2,11 @@ import 'dart:convert';
 
 Survey clientFromJson(String str) {
   final jsonData = json.decode(str);
-  return Survey.fromMap(jsonData);
+  return Survey.fromJsonMap(jsonData);
 }
 
 String clientToJson(Survey data) {
-  final dyn = data.toMap();
+  final dyn = data.toDbMap();
   return json.encode(dyn);
 }
 
@@ -23,14 +23,21 @@ class Survey {
     this.active,
   });
 
-  factory Survey.fromMap(Map<String, dynamic> json) => new Survey(
+  factory Survey.fromJsonMap(Map<String, dynamic> json) => new Survey(
         id: json["id"],
         name: json["name"],
         description: json["description"],
-        active: json["active"] == 1,
+        active: json["active"] == true,
       );
 
-  Map<String, dynamic> toMap() => {
+  factory Survey.fromDbMap(Map<String, dynamic> json) => new Survey(
+    id: json["id"],
+    name: json["name"],
+    description: json["description"],
+    active: json["active"] == 1,
+  );
+
+  Map<String, dynamic> toDbMap() => {
         "id": id,
         "name": name,
         "description": description,

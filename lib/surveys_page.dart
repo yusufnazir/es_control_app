@@ -1,5 +1,5 @@
 import 'package:es_control_app/rest/survey_rest_api.dart';
-import 'package:es_control_app/survey_page.dart';
+import 'package:es_control_app/survey_forms_page.dart';
 import 'package:flutter/material.dart';
 import 'package:progress_hud_v2/progress_hud.dart';
 
@@ -47,7 +47,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
 
   getSurveys() async {
     List<Survey> surveys = await DBProvider.db.getAllSurveys();
-    debugPrint("List of surveys $surveys");
+//    debugPrint("List of surveys $surveys");
     setState(() {
       this.surveys.addAll(surveys);
     });
@@ -56,6 +56,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
     return Scaffold(
       appBar: new AppBar(
         title: Text("Surveys"),
@@ -63,13 +64,42 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
           IconButton(
             icon: Icon(Icons.sync),
             onPressed: () {
-              dismissProgressHUD();
-              setState(() {
-                present = 0;
-                surveys.clear();
-                debugPrint("resyncing surveys");
-                _reSync();
-              });
+              showDialog(
+                  context: context,
+                  builder: (BuildContext buildContext) {
+                    return AlertDialog(
+                      contentPadding: EdgeInsets.all(0.0),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      title: Text(
+                        "Are you sure you want to sync the data?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.indigo),
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop(ConfirmAction.CANCEL);
+                          },
+                        ),
+                        FlatButton(
+                          child: const Text('Yes'),
+                          onPressed: () {
+                            dismissProgressHUD();
+                            setState(() {
+                              present = 0;
+                              surveys.clear();
+                              debugPrint("resyncing surveys");
+                              _reSync();
+                            });
+                            Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                          },
+                        )
+                      ],
+                    );
+                  });
+
             },
           )
         ],
@@ -87,7 +117,8 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                       title: Text('${surveys[position].name}',
                           style: TextStyle(
                             fontSize: 22.0,
-                            color: Colors.deepOrangeAccent,
+                            color: Theme.of(context).primaryColorLight,
+//                            color: Colors.deepOrangeAccent,
                           )),
                       subtitle: Text(
                         '${surveys[position].description}',

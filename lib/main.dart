@@ -3,12 +3,36 @@
 import 'package:es_control_app/home.dart';
 import 'package:es_control_app/l10n/localizations.dart';
 import 'package:es_control_app/login/LoginPage.dart';
+import 'package:es_control_app/surveys_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:splashscreen/splashscreen.dart';
-import 'package:es_control_app/surveys_listing_page.dart';
+import 'package:es_control_app/constants.dart';
 
 void main() {
+
+  ThemeData _buildShrineTheme() {
+    final ThemeData base = ThemeData.light();
+    return base.copyWith(
+      accentColor: Constants.accentColor,
+      primaryColor: Constants.primaryColor,
+      primaryColorLight: Constants.primaryColorLight,
+      buttonTheme: base.buttonTheme.copyWith(
+        buttonColor: Constants.primaryColor,
+        textTheme: ButtonTextTheme.normal,
+      ),
+      scaffoldBackgroundColor: Constants.kShrineBackgroundWhite,
+      cardColor: Constants.kShrineBackgroundWhite,
+      textSelectionColor: Constants.primaryColor,
+      errorColor: Constants.kShrineErrorRed,
+      // TODO: Add the text themes (103)
+      // TODO: Add the icon themes (103)
+      // TODO: Decorate the inputs (103)
+    );
+  }
+
+  final ThemeData _kShrineTheme = _buildShrineTheme();
+
   runApp(new MaterialApp(
     localizationsDelegates: [
       AppLocalizationsDelegate(),
@@ -19,10 +43,11 @@ void main() {
     onGenerateTitle: (BuildContext context) =>
         AppLocalizations.of(context).title,
     home: new MyApp(),
+    theme: _kShrineTheme,
     routes: {
       '/login': (context) => LoginPage(),
       '/home': (context) => Home(),
-      '/surveys':(context) => SurveysListingPage()
+      '/surveys': (context) => SurveysListingPage()
     },
   ));
 }
@@ -44,7 +69,7 @@ class _MyAppState extends State<MyApp> {
           'Welcome In SplashScreen',
           style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
         ),
-        image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
+//        image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
         backgroundColor: Colors.white,
         styleTextUnderTheLoader: new TextStyle(),
         photoSize: 100.0,

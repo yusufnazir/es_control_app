@@ -33,18 +33,18 @@ class SurveyPojo {
   });
 
   factory SurveyPojo.fromMap(Map<String, dynamic> json) => new SurveyPojo(
-        survey: Survey.fromMap(json["survey"]),
+        survey: Survey.fromJsonMap(json["survey"]),
         surveyGroups: json["surveyGroups"]
-            .map<SurveyGroup>((value) => SurveyGroup.fromMap(value)).toList(),
+            .map<SurveyGroup>((value) => SurveyGroup.fromJsonMap(value)).toList(),
         surveyQuestions: json["surveyQuestions"]
-            .map<SurveyQuestion>((value) => SurveyQuestion.fromMap(value))
+            .map<SurveyQuestion>((value) => SurveyQuestion.fromJsonMap(value))
             .toList(),
         surveyQuestionAnswerChoices: json["surveyQuestionAnswerChoices"]
-            .map<SurveyQuestionAnswerChoice>((value) => SurveyQuestionAnswerChoice.fromMap(value))
+            .map<SurveyQuestionAnswerChoice>((value) => SurveyQuestionAnswerChoice.fromJsonMap(value))
             .toList(),
         surveyQuestionAnswerChoiceSelections: json[
                 "surveyQuestionAnswerChoiceSelections"]
-            .map<SurveyQuestionAnswerChoiceSelection>((value) => SurveyQuestionAnswerChoiceSelection.fromMap(value))
+            .map<SurveyQuestionAnswerChoiceSelection>((value) => SurveyQuestionAnswerChoiceSelection.fromJsonMap(value))
             .toList(),
       );
 

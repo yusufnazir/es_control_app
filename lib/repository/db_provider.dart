@@ -6,7 +6,9 @@ import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -53,7 +55,8 @@ class DBProvider {
           "question_type TEXT,"
           "required BIT,"
           "required_error TEXT,"
-          "multiple_selection BIT"
+          "multiple_selection BIT,"
+          "group_id INTEGER"
           ")");
       await db.execute("CREATE TABLE SurveyQuestionAnswerChoices ("
           "id INTEGER PRIMARY KEY,"
@@ -73,12 +76,20 @@ class DBProvider {
           "validation_error TEXT,"
           "multiple_selection BIT,"
           "is_other BIT,"
-          "make_selected_querion_required INTEGER"
+          "make_selected_question_required INTEGER"
           ")");
-      await db.execute("CREATE TABLE SurveyQuestionAnswerChoiceSelection ("
+      await db.execute("CREATE TABLE SurveyQuestionAnswerChoiceSelections ("
           "id INTEGER PRIMARY KEY,"
           "survey_question_answer_choice_id INTEGER,"
           "label TEXT"
+          ")");
+      await db.execute("CREATE TABLE SurveyResponses ("
+          "uniqueId TEXT PRIMARY KEY,"
+          "id INTEGER,"
+          "active BIT,"
+          "survey_id INTEGER,"
+          "form_name TEXT,"
+          "created_on TEXT"
           ")");
     });
   }
@@ -90,7 +101,7 @@ class DBProvider {
   Future<Survey> getSurvey(int id) async {
     final db = await database;
     var res = await db.query("Surveys", where: "id = ?", whereArgs: [id]);
-    return res.isNotEmpty ? Survey.fromMap(res.first) : null;
+    return res.isNotEmpty ? Survey.fromDbMap(res.first) : null;
   }
 
   Future<Survey> createSurvey(Survey survey) async {
@@ -101,13 +112,13 @@ class DBProvider {
         "INSERT Into Surveys (id,name,description,active)"
         " VALUES (?,?,?,?)",
         [survey.id, survey.name, survey.description, survey.active]);
-    debugPrint("Created survey: " + survey.toString());
+//    debugPrint("Created survey: " + survey.toString());
     return survey;
   }
 
   updateSurvey(Survey survey) async {
     final db = await database;
-    var res = await db.update("Surveys", survey.toMap(),
+    var res = await db.update("Surveys", survey.toDbMap(),
         where: "id = ?", whereArgs: [survey.id]);
     return res;
   }
@@ -123,7 +134,7 @@ class DBProvider {
     final db = await database;
     var res = await db.query("Surveys");
     List<Survey> list =
-        res.isNotEmpty ? res.map((c) => Survey.fromMap(c)).toList() : [];
+        res.isNotEmpty ? res.map((c) => Survey.fromDbMap(c)).toList() : [];
 //    debugPrint("Retrieved all surveys");
     return list;
   }
@@ -135,7 +146,7 @@ class DBProvider {
         name: survey.name,
         description: survey.description,
         active: !survey.active);
-    var res = await db.update("Surveys", blocked.toMap(),
+    var res = await db.update("Surveys", blocked.toDbMap(),
         where: "id = ?", whereArgs: [survey.id]);
     return res;
   }
@@ -148,14 +159,19 @@ class DBProvider {
     var res = await db.query("Surveys", where: "blocked = ? ", whereArgs: [1]);
 
     List<Survey> list =
-        res.isNotEmpty ? res.map((c) => Survey.fromMap(c)).toList() : [];
+        res.isNotEmpty ? res.map((c) => Survey.fromDbMap(c)).toList() : [];
 //    debugPrint("Retrieved all blocked surveys");
     return list;
   }
 
   deleteAll() async {
     final db = await database;
-    db.rawDelete("Delete from Surveys");
+    await db.rawDelete("Delete from Surveys");
+    await db.rawDelete("Delete from SurveyGroups");
+    await db.rawDelete("Delete from SurveyQuestions");
+    await db.rawDelete("Delete from SurveyQuestionAnswerChoices");
+    await db.rawDelete("Delete from SurveyQuestionAnswerChoiceSelections");
+
 //    debugPrint("Removed all surveys");
   }
 
@@ -165,7 +181,7 @@ class DBProvider {
   Future<SurveyGroup> getSurveyGroup(int id) async {
     final db = await database;
     var res = await db.query("SurveyGroups", where: "id = ?", whereArgs: [id]);
-    return res.isNotEmpty ? SurveyGroup.fromMap(res.first) : null;
+    return res.isNotEmpty ? SurveyGroup.fromDbMap(res.first) : null;
   }
 
   createSurveyGroup(SurveyGroup surveyGroup) async {
@@ -176,7 +192,7 @@ class DBProvider {
         " VALUES (?,?,?,?,?)",
         [
           surveyGroup.id,
-          surveyGroup.survey,
+          surveyGroup.surveyId,
           surveyGroup.name,
           surveyGroup.description,
           surveyGroup.active
@@ -187,7 +203,7 @@ class DBProvider {
 
   updateSurveyGroup(SurveyGroup surveyGroup) async {
     final db = await database;
-    var res = await db.update("SurveyGroups", surveyGroup.toMap(),
+    var res = await db.update("SurveyGroups", surveyGroup.toDbMap(),
         where: "id = ?", whereArgs: [surveyGroup.id]);
     return res;
   }
@@ -203,7 +219,7 @@ class DBProvider {
     final db = await database;
     var res = await db.query("SurveyGroups");
     List<SurveyGroup> list =
-        res.isNotEmpty ? res.map((c) => SurveyGroup.fromMap(c)).toList() : [];
+        res.isNotEmpty ? res.map((c) => SurveyGroup.fromDbMap(c)).toList() : [];
 //    debugPrint("Retrieved all surveyGroups");
     return list;
   }
@@ -216,7 +232,7 @@ class DBProvider {
     final db = await database;
     var res =
         await db.query("SurveyQuestions", where: "id = ?", whereArgs: [id]);
-    return res.isNotEmpty ? SurveyQuestion.fromMap(res.first) : null;
+    return res.isNotEmpty ? SurveyQuestion.fromDbMap(res.first) : null;
   }
 
   createSurveyQuestion(SurveyQuestion surveyQuestion) async {
@@ -224,18 +240,20 @@ class DBProvider {
     //insert to the table using the new id
     var raw = await db.rawInsert(
         "INSERT Into SurveyQuestions (id,active,survey_id,question,question_description,order_,question_type,required,required_error,"
-        "multiple_selection)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "multiple_selection, group_id)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         [
           surveyQuestion.id,
           surveyQuestion.active,
+          surveyQuestion.surveyId,
           surveyQuestion.question,
           surveyQuestion.questionDescription,
           surveyQuestion.order,
           surveyQuestion.questionType,
           surveyQuestion.required,
           surveyQuestion.requiredError,
-          surveyQuestion.multipleSelection
+          surveyQuestion.multipleSelection,
+          surveyQuestion.groupId,
         ]);
 //    debugPrint("Created surveyQuestion: " + surveyQuestion.toString());
     return raw;
@@ -243,7 +261,7 @@ class DBProvider {
 
   updateSurveyQuestion(SurveyQuestion surveyQuestion) async {
     final db = await database;
-    var res = await db.update("SurveyQuestions", surveyQuestion.toMap(),
+    var res = await db.update("SurveyQuestions", surveyQuestion.toDbMap(),
         where: "id = ?", whereArgs: [surveyQuestion.id]);
     return res;
   }
@@ -259,10 +277,36 @@ class DBProvider {
     final db = await database;
     var res = await db.query("SurveyQuestions");
     List<SurveyQuestion> list = res.isNotEmpty
-        ? res.map((c) => SurveyQuestion.fromMap(c)).toList()
+        ? res.map((c) => SurveyQuestion.fromDbMap(c)).toList()
         : [];
 //    debugPrint("Retrieved all surveyQuestions");
     return list;
+  }
+
+  Future<List<SurveyQuestion>> getAllSurveyQuestionsForSurvey(
+      int surveyId) async {
+    final db = await database;
+    var res = await db.query("SurveyQuestions",
+        where: "survey_id= ?", whereArgs: [surveyId], orderBy: "order_");
+    List<SurveyQuestion> list = res.isNotEmpty
+        ? res.map((c) => SurveyQuestion.fromDbMap(c)).toList()
+        : [];
+//    debugPrint("Retrieved all surveyQuestions ${list.length}");
+    return list;
+  }
+
+  Future<bool> isSurveyQuestionDependant(int surveyQuestionId) async {
+    final db = await database;
+    var res = await db.query(
+      "SurveyQuestionAnswerChoices",
+      where: "make_selected_question_required= ?",
+      whereArgs: [surveyQuestionId],
+    );
+    List<SurveyQuestionAnswerChoice> list = res.isNotEmpty
+        ? res.map((c) => SurveyQuestionAnswerChoice.fromDbMap(c)).toList()
+        : [];
+//    debugPrint("SurveyQuestion is dependant ${(list != null && list.length > 0)}");
+    return (list != null && list.length > 0);
   }
 
   /*
@@ -272,10 +316,10 @@ class DBProvider {
   Future<SurveyQuestionAnswerChoice> getSurveyQuestionAnswerChoice(
       int id) async {
     final db = await database;
-    var res = await db
-        .query("SurveyQuestionAnswerChoices", where: "id = ?", whereArgs: [id]);
+    var res = await db.query("SurveyQuestionAnswerChoices",
+        where: "id = ?", whereArgs: [id], columns: ["id"]);
     return res.isNotEmpty
-        ? SurveyQuestionAnswerChoice.fromMap(res.first)
+        ? SurveyQuestionAnswerChoice.fromDbMap(res.first)
         : null;
   }
 
@@ -286,11 +330,11 @@ class DBProvider {
     var raw = await db.rawInsert(
         "INSERT Into SurveyQuestionAnswerChoices (id,survey_question_id,label,question_type,axis,matrix_column_type,"
         "index_,min_length,max_length,min_value,max_value,min_date,max_date,validate,validation_error,multiple_selection,"
-        "is_other,make_selected_querion_required)"
+        "is_other,make_selected_question_required)"
         " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
           surveyQuestionAnswerChoice.id,
-          surveyQuestionAnswerChoice.surveyQuestion,
+          surveyQuestionAnswerChoice.surveyQuestionId,
           surveyQuestionAnswerChoice.label,
           surveyQuestionAnswerChoice.questionType,
           surveyQuestionAnswerChoice.axis,
@@ -317,7 +361,7 @@ class DBProvider {
       SurveyQuestionAnswerChoice surveyQuestionAnswerChoice) async {
     final db = await database;
     var res = await db.update(
-        "SurveyQuestionAnswerChoices", surveyQuestionAnswerChoice.toMap(),
+        "SurveyQuestionAnswerChoices", surveyQuestionAnswerChoice.toDbMap(),
         where: "id = ?", whereArgs: [surveyQuestionAnswerChoice.id]);
     return res;
   }
@@ -335,9 +379,21 @@ class DBProvider {
     final db = await database;
     var res = await db.query("SurveyQuestionAnswerChoices");
     List<SurveyQuestionAnswerChoice> list = res.isNotEmpty
-        ? res.map((c) => SurveyQuestionAnswerChoice.fromMap(c)).toList()
+        ? res.map((c) => SurveyQuestionAnswerChoice.fromDbMap(c)).toList()
         : [];
 //    debugPrint("Retrieved all surveyQuestionAnswerChoices");
+    return list;
+  }
+
+  Future<List<SurveyQuestionAnswerChoice>>
+      getSurveyQuestionAnswerChoiceByQuestion(int surveyQuestionId) async {
+    final db = await database;
+    var res = await db.query("SurveyQuestionAnswerChoices",
+        where: "survey_question_id=?", whereArgs: [surveyQuestionId]);
+    List<SurveyQuestionAnswerChoice> list = res.isNotEmpty
+        ? res.map((c) => SurveyQuestionAnswerChoice.fromDbMap(c)).toList()
+        : [];
+    debugPrint("Retrieved surveyQuestionAnswerChoices size ${list.length}");
     return list;
   }
 
@@ -351,7 +407,7 @@ class DBProvider {
     var res = await db.query("SurveyQuestionAnswerChoiceSelections",
         where: "id = ?", whereArgs: [id]);
     return res.isNotEmpty
-        ? SurveyQuestionAnswerChoiceSelection.fromMap(res.first)
+        ? SurveyQuestionAnswerChoiceSelection.fromDbMap(res.first)
         : null;
   }
 
@@ -365,7 +421,7 @@ class DBProvider {
         " VALUES (?,?,?)",
         [
           surveyQuestionAnswerChoiceSelection.id,
-          surveyQuestionAnswerChoiceSelection.surveyQuestionAnswerChoice,
+          surveyQuestionAnswerChoiceSelection.surveyQuestionAnswerChoiceId,
           surveyQuestionAnswerChoiceSelection.label
         ]);
 //    debugPrint("Created surveyQuestionAnswerChoiceSelection: " +
@@ -378,7 +434,7 @@ class DBProvider {
           surveyQuestionAnswerChoiceSelection) async {
     final db = await database;
     var res = await db.update("SurveyQuestionAnswerChoiceSelections",
-        surveyQuestionAnswerChoiceSelection.toMap(),
+        surveyQuestionAnswerChoiceSelection.toDbMap(),
         where: "id = ?", whereArgs: [surveyQuestionAnswerChoiceSelection.id]);
     return res;
   }
@@ -397,8 +453,63 @@ class DBProvider {
     var res = await db.query("SurveyQuestionAnswerChoiceSelections");
     List<SurveyQuestionAnswerChoiceSelection> list = res.isNotEmpty
         ? res
-            .map((c) => SurveyQuestionAnswerChoiceSelection.fromMap(c))
+            .map((c) => SurveyQuestionAnswerChoiceSelection.fromDbMap(c))
             .toList()
+        : [];
+//    debugPrint("Retrieved all surveyQuestionAnswerChoiceSelections");
+    return list;
+  }
+
+  /*
+  SurveyResponses
+   */
+
+  Future<SurveyResponse> getSurveyResponse(int id) async {
+    final db = await database;
+    var res =
+        await db.query("SurveyResponses", where: "id = ?", whereArgs: [id]);
+    return res.isNotEmpty ? SurveyResponse.fromDbMap(res.first) : null;
+  }
+
+  createSurveyResponse(SurveyResponse surveyResponse) async {
+    final db = await database;
+    //insert to the table using the new id
+    var raw = await db.rawInsert(
+        "INSERT Into SurveyResponses (id,uniqueId, survey_id,form_name, created_on,active)"
+        " VALUES (?,?,?,?,?,?)",
+        [
+          surveyResponse.id,
+          surveyResponse.uniqueId,
+          surveyResponse.surveyId,
+          surveyResponse.formName,
+          DateFormat('yyyy-MM-dd – kk:mm').format(surveyResponse.createdOn),
+          surveyResponse.active
+        ]);
+//    debugPrint("Created surveyQuestionAnswerChoiceSelection: " +
+//        surveyQuestionAnswerChoiceSelection.toString());
+    return raw;
+  }
+
+  updateSurveyResponse(SurveyResponse surveyResponse) async {
+    final db = await database;
+    var res = await db.update("SurveyResponses", surveyResponse.toDbMap(),
+        where: "id = ?", whereArgs: [surveyResponse.id]);
+    return res;
+  }
+
+  deleteSurveyResponse(int id) async {
+    final db = await database;
+    var delete = db.delete("SurveyResponses", where: "id = ?", whereArgs: [id]);
+//    debugPrint("Removed surveyQuestionAnswerChoiceSelection with id [$id]");
+    return delete;
+  }
+
+  Future<List<SurveyResponse>> getAllSurveyResponses(int surveyId) async {
+    final db = await database;
+    var res = await db
+        .query("SurveyResponses", where: "survey_id=?", whereArgs: [surveyId]);
+    List<SurveyResponse> list = res.isNotEmpty
+        ? res.map((c) => SurveyResponse.fromDbMap(c)).toList()
         : [];
 //    debugPrint("Retrieved all surveyQuestionAnswerChoiceSelections");
     return list;

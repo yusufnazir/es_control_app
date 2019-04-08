@@ -1,21 +1,21 @@
 import 'dart:convert';
 
-import 'survey_model.dart';
+import 'package:es_control_app/util/utilities.dart';
 
 SurveyQuestion clientFromJson(String str) {
   final jsonData = json.decode(str);
-  return SurveyQuestion.fromMap(jsonData);
+  return SurveyQuestion.fromJsonMap(jsonData);
 }
 
 String clientToJson(SurveyQuestion data) {
-  final dyn = data.toMap();
+  final dyn = data.toDbMap();
   return json.encode(dyn);
 }
 
 class SurveyQuestion {
   int id;
   bool active;
-  Survey survey;
+  int surveyId;
   String question;
   String questionDescription;
   int order;
@@ -23,38 +23,55 @@ class SurveyQuestion {
   bool required;
   String requiredError;
   bool multipleSelection;
+  int groupId;
 
-  SurveyQuestion({
-    this.id,
-    this.active,
-    this.survey,
-    this.question,
-    this.questionDescription,
-    this.order,
-    this.questionType,
-    this.required,
-    this.requiredError,
-    this.multipleSelection,
-  });
+  SurveyQuestion(
+      {this.id,
+      this.active,
+      this.surveyId,
+      this.question,
+      this.questionDescription,
+      this.order,
+      this.questionType,
+      this.required,
+      this.requiredError,
+      this.multipleSelection,
+      this.groupId});
 
-  factory SurveyQuestion.fromMap(Map<String, dynamic> json) =>
+  factory SurveyQuestion.fromJsonMap(Map<String, dynamic> json) =>
       new SurveyQuestion(
         id: json["id"],
-        active: json["active"] == 1,
-        survey: Survey.fromMap(json["survey"]),
+        active: json["active"] == true,
+        surveyId: getSurveyIdFromJson(json["survey"]),
         question: json["question"],
         questionDescription: json["questionDescription"],
         order: json["order"],
         questionType: json["questionType"],
-        required: json["required"] == 1,
+        required: json["required"] == true,
         requiredError: json["requiredError"],
-        multipleSelection: json["multipleSelection"] == 1,
+        multipleSelection: json["multipleSelection"] == true,
+        groupId: getSurveyIdFromJson(json["surveyGroup"]),
       );
 
-  Map<String, dynamic> toMap() => {
+  factory SurveyQuestion.fromDbMap(Map<String, dynamic> json) =>
+      new SurveyQuestion(
+        id: json["id"],
+        active: json["active"] == 1,
+        surveyId: json["survey_id"],
+        question: json["question"],
+        questionDescription: json["question_description"],
+        order: json["order_"],
+        questionType: json["question_type"],
+        required: json["required"] == 1,
+        requiredError: json["required_error"],
+        multipleSelection: json["multiple_selection"] == 1,
+        groupId: json["group_id"],
+      );
+
+  Map<String, dynamic> toDbMap() => {
         "id": id,
         "active": active,
-        "survey_id": survey.id,
+        "survey_id": surveyId,
         "question": question,
         "question_description": questionDescription,
         "order_": order,
@@ -62,12 +79,11 @@ class SurveyQuestion {
         "required": required,
         "required_error": requiredError,
         "multiple_selection": multipleSelection,
+        "group_id": groupId,
       };
 
   @override
   String toString() {
-    return 'SurveyQuestion{id: $id, active: $active, survey: $survey, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection}';
+    return 'SurveyQuestion{id: $id, active: $active, surveyId: $surveyId, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection, groupId: $groupId}';
   }
-
-
 }

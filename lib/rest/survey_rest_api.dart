@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
+import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
+import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/pojo/survey_pojo.dart';
 import 'package:es_control_app/repository/db_provider.dart';
@@ -13,23 +15,41 @@ class RestApi {
   The Survey table is cleaned up before storing the retrieved survey.
    */
   getSurveysFromServerAndStoreInDB() async {
-    var response = await http
-        .get("http://192.168.0.105:9300/escontrol/rest/api/v1/surveys/");
+    try {
+      cleanUpDatabase();
+      var response = await http
+          .get("http://192.168.0.103:9300/escontrol/rest/api/v1/surveys/");
+//    .get("http://10.10.10.101:9300/escontrol/rest/api/v1/surveys/");
 //      debugPrint(response.body);
-    List<SurveyPojo> surveyPojos = parseSurveys(response.body);
-    if (surveyPojos != null) {
-      for (SurveyPojo surveyPojo in surveyPojos) {
-//          debugPrint(surveyPojo.toString());
+      List<SurveyPojo> surveyPojos = parseSurveys(response.body);
+      if (surveyPojos != null) {
+        for (SurveyPojo surveyPojo in surveyPojos) {
+          Survey survey = surveyPojo.survey;
+          await manageSurvey(survey);
 
-        Survey survey = surveyPojo.survey;
-        await manageSurvey(survey);
+          List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
+          await manageSurveyGroups(surveyGroups);
 
-        List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
-        manageSurveyGroups(surveyGroups);
+          List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;
+          debugPrint(
+              "Surveyquestions size from server ${surveyQuestions.length}");
+          await manageSurveyQuestions(surveyQuestions);
 
-        List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;
-        manageSurveyQuestions(surveyQuestions);
+          List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices =
+              surveyPojo.surveyQuestionAnswerChoices;
+          debugPrint(
+              "SurveyQuestionAnswerChoices size from server ${surveyQuestionAnswerChoices.length}");
+          await manageSurveyQuestionAnswerChoices(surveyQuestionAnswerChoices);
+
+          List<SurveyQuestionAnswerChoiceSelection> surveyQuestionAnswerChoiceSelections =
+              surveyPojo.surveyQuestionAnswerChoiceSelections;
+          debugPrint(
+              "SurveyQuestionAnswerChoiceSelections size from server ${surveyQuestionAnswerChoiceSelections.length}");
+          await manageSurveyQuestionAnswerChoiceSelections(surveyQuestionAnswerChoiceSelections);
+        }
       }
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 
@@ -45,7 +65,7 @@ class RestApi {
 
   manageSurvey(Survey survey) async {
     Survey existingSurvey = await DBProvider.db.getSurvey(survey.id);
-    debugPrint("Does survey exist ${existingSurvey != null}");
+//    debugPrint("Does survey exist ${existingSurvey != null}");
     if (existingSurvey == null) {
       await DBProvider.db.createSurvey(survey);
     } else {
@@ -53,31 +73,78 @@ class RestApi {
     }
   }
 
-  manageSurveyGroups(List<SurveyGroup> surveyGroups) {
+  manageSurveyGroups(List<SurveyGroup> surveyGroups) async {
     if (surveyGroups != null) {
       for (SurveyGroup surveyGroup in surveyGroups) {
-        Future<SurveyGroup> existingSurveyGroup =
-            DBProvider.db.getSurveyGroup(surveyGroup.id);
+        SurveyGroup existingSurveyGroup =
+            await DBProvider.db.getSurveyGroup(surveyGroup.id);
         if (existingSurveyGroup == null) {
-          DBProvider.db.createSurveyGroup(surveyGroup);
+          await DBProvider.db.createSurveyGroup(surveyGroup);
         } else {
-          DBProvider.db.updateSurveyGroup(surveyGroup);
+          await DBProvider.db.updateSurveyGroup(surveyGroup);
         }
       }
     }
   }
 
-  manageSurveyQuestions(List<SurveyQuestion> surveyQuestions) {
+  manageSurveyQuestions(List<SurveyQuestion> surveyQuestions) async {
     if (surveyQuestions != null) {
       for (SurveyQuestion surveyQuestion in surveyQuestions) {
-        Future<SurveyQuestion> existingSurveyQuestion =
-            DBProvider.db.getSurveyQuestion(surveyQuestion.id);
+        SurveyQuestion existingSurveyQuestion =
+            await DBProvider.db.getSurveyQuestion(surveyQuestion.id);
         if (existingSurveyQuestion == null) {
-          DBProvider.db.createSurveyQuestion(surveyQuestion);
+//          debugPrint("Creating survey question $surveyQuestion");
+          await DBProvider.db.createSurveyQuestion(surveyQuestion);
         } else {
-          DBProvider.db.updateSurveyQuestion(surveyQuestion);
+          await DBProvider.db.updateSurveyQuestion(surveyQuestion);
         }
       }
     }
+  }
+
+  manageSurveyQuestionAnswerChoices(
+      List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices) async {
+    if (surveyQuestionAnswerChoices != null) {
+      for (SurveyQuestionAnswerChoice surveyQuestionAnswerChoice
+          in surveyQuestionAnswerChoices) {
+        SurveyQuestionAnswerChoice existingSurveyQuestionAnswerChoice =
+            await DBProvider.db
+                .getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
+        if (existingSurveyQuestionAnswerChoice == null) {
+//          debugPrint("Creating survey question $surveyQuestion");
+          await DBProvider.db
+              .createSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
+        } else {
+          await DBProvider.db
+              .updateSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
+        }
+      }
+    }
+  }
+
+  manageSurveyQuestionAnswerChoiceSelections(
+      List<SurveyQuestionAnswerChoiceSelection>
+          surveyQuestionAnswerChoiceSelections) async {
+    if (surveyQuestionAnswerChoiceSelections != null) {
+      for (SurveyQuestionAnswerChoiceSelection surveyQuestionAnswerChoiceSelection
+          in surveyQuestionAnswerChoiceSelections) {
+        SurveyQuestionAnswerChoiceSelection
+            existingSurveyQuestionAnswerChoiceSelection = await DBProvider.db
+                .getSurveyQuestionAnswerChoiceSelection(
+                    surveyQuestionAnswerChoiceSelection.id);
+        if (existingSurveyQuestionAnswerChoiceSelection == null) {
+//          debugPrint("Creating survey question $surveyQuestion");
+          await DBProvider.db.createSurveyQuestionAnswerChoiceSelection(
+              surveyQuestionAnswerChoiceSelection);
+        } else {
+          await DBProvider.db.updateSurveyQuestionAnswerChoiceSelection(
+              surveyQuestionAnswerChoiceSelection);
+        }
+      }
+    }
+  }
+
+  void cleanUpDatabase() async{
+    await DBProvider.db.deleteAll();
   }
 }

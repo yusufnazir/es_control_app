@@ -1,14 +1,16 @@
 import 'dart:convert';
 
+import 'package:es_control_app/util/utilities.dart';
+
 import 'survey_model.dart';
 
 SurveyGroup clientFromJson(String str) {
   final jsonData = json.decode(str);
-  return SurveyGroup.fromMap(jsonData);
+  return SurveyGroup.fromJsonMap(jsonData);
 }
 
 String clientToJson(SurveyGroup data) {
-  final dyn = data.toMap();
+  final dyn = data.toDbMap();
   return json.encode(dyn);
 }
 
@@ -16,35 +18,43 @@ class SurveyGroup {
   int id;
   String name;
   String description;
-  Survey survey;
+  int surveyId;
   bool active;
 
   SurveyGroup({
     this.id,
     this.name,
     this.description,
-    this.survey,
+    this.surveyId,
     this.active,
   });
 
-  factory SurveyGroup.fromMap(Map<String, dynamic> json) => new SurveyGroup(
+  factory SurveyGroup.fromJsonMap(Map<String, dynamic> json) => new SurveyGroup(
         id: json["id"],
         name: json["name"],
         description: json["description"],
-        survey:Survey.fromMap(json["survey"]),
+        surveyId: getSurveyIdFromJson(json["survey"]),
+        active: json["active"] == true,
+      );
+
+  factory SurveyGroup.fromDbMap(Map<String, dynamic> json) => new SurveyGroup(
+        id: json["id"],
+        name: json["name"],
+        description: json["description"],
+        surveyId: json["survey_id"],
         active: json["active"] == 1,
       );
 
-  Map<String, dynamic> toMap() => {
+  Map<String, dynamic> toDbMap() => {
         "id": id,
         "name": name,
         "description": description,
-        "survey_id": survey.id,
+        "survey_id": surveyId,
         "active": active,
       };
 
   @override
   String toString() {
-    return 'SurveyGroup{id: $id, name: $name, description: $description, survey: $survey, active: $active}';
+    return 'SurveyGroup{id: $id, name: $name, description: $description, survey: $surveyId, active: $active}';
   }
 }
