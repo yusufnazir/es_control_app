@@ -1,3 +1,4 @@
+import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -71,20 +72,56 @@ class SurveyPageState extends State<SurveyPage> {
                   itemCount: surveyResponses.length,
                   itemBuilder: (context, position) {
                     return Card(
+//                        color: Color.fromRGBO(58, 66, 86, 1.0),
+                        color: Constants.primaryColorLight,
                         child: Column(children: <Widget>[
-                      Divider(height: 5.0),
-                      ListTile(
-                        onTap: () => surveyFormSelected(
-                            context, surveyResponses[position]),
-                        title: Text('${surveyResponses[position].formName}',
-                            style: TextStyle(
-                              fontSize: 22.0,
-                              color: Theme.of(context).primaryColorLight,
-                            )),
-                      ),
-                    ]));
+                          Divider(height: 5.0),
+                          createFormListTile(
+                              surveyResponses[position], position)
+                        ]));
                   }))
         ]));
+  }
+
+  createFormListTile(SurveyResponse surveyResponse, int position) {
+    return ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        leading: Container(
+          padding: EdgeInsets.only(right: 12.0),
+          decoration: new BoxDecoration(
+              border: new Border(
+                  right: new BorderSide(width: 1.0, color: Colors.white24))),
+          child: Icon(Icons.cloud_upload, color: Colors.white),
+        ),
+        title: Text(
+          surveyResponse.formName,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22.0,
+          ),
+        ),
+        // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
+
+        subtitle: Row(
+          children: <Widget>[
+            Icon(Icons.date_range, color: Colors.yellowAccent),
+            Text(" ${surveyResponse.createdOn}", style: TextStyle(color: Colors.white))
+          ],
+        ),
+        trailing: IconButton(
+          onPressed: () {
+            surveyFormSelected(context, surveyResponses[position]);
+          },
+          icon: Icon(
+            Icons.keyboard_arrow_right,
+            color: Colors.white,
+            size: 30.0,
+          ),
+          padding: EdgeInsets.all(0.0),
+        )
+//        trailing:Icon(Icons.keyboard_arrow_right, color: Colors.white, size: 30.0)
+        );
   }
 
   void createNewFormLayout(BuildContext context) {
@@ -97,7 +134,6 @@ class SurveyPageState extends State<SurveyPage> {
 
     void createNewForm() async {
       var text = formNameController.text;
-      debugPrint("Formname [$text]");
 
       SurveyResponse surveyResponse = new SurveyResponse();
       Uuid uuid = Uuid();
@@ -109,7 +145,6 @@ class SurveyPageState extends State<SurveyPage> {
       await DBProvider.db.createSurveyResponse(surveyResponse);
       List<SurveyResponse> surveyResponses =
           await DBProvider.db.getAllSurveyResponses(widget.survey.id);
-      debugPrint("SurveyResponses $surveyResponses");
       setState(() {
         this.surveyResponses.add(surveyResponse);
       });
@@ -164,7 +199,6 @@ class SurveyPageState extends State<SurveyPage> {
   void getSurveyResponses() async {
     List<SurveyResponse> surveyResponses =
         await DBProvider.db.getAllSurveyResponses(widget.survey.id);
-    debugPrint("List of surveyResponses $surveyResponses");
     setState(() {
       this.surveyResponses.addAll(surveyResponses);
     });

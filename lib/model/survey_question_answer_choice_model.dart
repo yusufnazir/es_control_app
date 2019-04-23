@@ -1,18 +1,30 @@
 import 'dart:convert';
+
 import 'package:es_control_app/util/utilities.dart';
-import 'survey_question_model.dart';
-
-SurveyQuestionAnswerChoice clientFromJson(String str) {
-  final jsonData = json.decode(str);
-  return SurveyQuestionAnswerChoice.fromJsonMap(jsonData);
-}
-
-String clientToJson(SurveyQuestionAnswerChoice data) {
-  final dyn = data.toDbMap();
-  return json.encode(dyn);
-}
 
 class SurveyQuestionAnswerChoice {
+  static final String tableSurveyQuestionAnswerChoices =
+      "SurveyQuestionAnswerChoices";
+  static final String columnId = "id";
+  static final String columnSurveyQuestionId = "survey_question_id";
+  static final String columnLabel = "label";
+  static final String columnQuestionType = "question_type";
+  static final String columnAxis = "axis";
+  static final String columnMatrixColumnType = "matrix_column_type";
+  static final String columnIndex = "index_";
+  static final String columnMinLength = "min_length";
+  static final String columnMaxLength = "max_length";
+  static final String columnMinValue = "min_value";
+  static final String columnMaxValue = "max_value";
+  static final String columnMinDate = "min_date";
+  static final String columnMaxDate = "max_date";
+  static final String columnValidate = "validate";
+  static final String columnValidationError = "validation_error";
+  static final String columnMultipleSelection = "multiple_selection";
+  static final String columnIsOther = "is_other";
+  static final String columnMakeSelectedQuestionRequired =
+      "make_selected_question_required";
+
   int id;
   int surveyQuestionId;
   String label;
@@ -53,10 +65,21 @@ class SurveyQuestionAnswerChoice {
     this.makeSelectedQuestionRequired,
   });
 
+  SurveyQuestionAnswerChoice clientFromJson(String str) {
+    final jsonData = json.decode(str);
+    return SurveyQuestionAnswerChoice.fromJsonMap(jsonData);
+  }
+
+  String clientToJson(SurveyQuestionAnswerChoice data) {
+    final dyn = data.toDbMap();
+    return json.encode(dyn);
+  }
+
   factory SurveyQuestionAnswerChoice.fromJsonMap(Map<String, dynamic> json) =>
       new SurveyQuestionAnswerChoice(
         id: json["id"],
-        surveyQuestionId: getSurveyQuestionIdFromJson(json["surveyQuestion"]),
+        surveyQuestionId:
+            Utilities.getSurveyQuestionIdFromJson(json["surveyQuestion"]),
         label: json["label"],
         questionType: json["questionType"],
         axis: json["axis"],
@@ -77,45 +100,45 @@ class SurveyQuestionAnswerChoice {
 
   factory SurveyQuestionAnswerChoice.fromDbMap(Map<String, dynamic> json) =>
       new SurveyQuestionAnswerChoice(
-        id: json["id"],
-        surveyQuestionId: json["survey_question_id"],
-        label: json["label"],
-        questionType: json["question_type"],
-        axis: json["axis"],
-        matrixColumnType: json["matrix_column_type"],
-        index: json["index_"],
-        minLength: json["min_length"],
-        maxLength: json["max_length"],
-        minValue: json["min_value"],
-        maxValue: json["max_value"],
-        minDate: json["min_date"],
-        maxDate: json["max_date"],
-        validate: json["validate"] == 1,
-        validationError: json["validation_error"],
-        multipleSelection: json["multiple_selection"] == 1,
-        isOther: json["is_other"] == 1,
-        makeSelectedQuestionRequired: json["make_selected_question_required"],
+        id: json[columnId],
+        surveyQuestionId: json[columnSurveyQuestionId],
+        label: json[columnLabel],
+        questionType: json[columnQuestionType],
+        axis: json[columnAxis],
+        matrixColumnType: json[columnMatrixColumnType],
+        index: json[columnIndex],
+        minLength: json[columnMinLength],
+        maxLength: json[columnMaxLength],
+        minValue: json[columnMinValue],
+        maxValue: json[columnMaxValue],
+        minDate: json[columnMinDate],
+        maxDate: json[columnMaxDate],
+        validate: json[columnValidate] == 1,
+        validationError: json[columnValidationError],
+        multipleSelection: json[columnMultipleSelection] == 1,
+        isOther: json[columnIsOther] == 1,
+        makeSelectedQuestionRequired: json[columnMakeSelectedQuestionRequired],
       );
 
   Map<String, dynamic> toDbMap() => {
-        "id": id,
-        "survey_question_id": surveyQuestionId,
-        "label": label,
-        "question_type": questionType,
-        "axis": axis,
-        "matrix_column_type": matrixColumnType,
-        "index_": index,
-        "min_length": minLength,
-        "max_length": maxLength,
-        "min_value": minValue,
-        "max_value": maxValue,
-        "min_date": minDate,
-        "max_date": maxDate,
-        "validate": validate,
-        "validation_error": validationError,
-        "multiple_selection": multipleSelection,
-        "is_other": isOther,
-        "make_selected_question_required": makeSelectedQuestionRequired,
+        columnId: id,
+        columnSurveyQuestionId: surveyQuestionId,
+        columnLabel: label,
+        columnQuestionType: questionType,
+        columnAxis: axis,
+        columnMatrixColumnType: matrixColumnType,
+        columnIndex: index,
+        columnMinLength: minLength,
+        columnMaxLength: maxLength,
+        columnMinValue: minValue,
+        columnMaxValue: maxValue,
+        columnMinDate: minDate,
+        columnMaxDate: maxDate,
+        columnValidate: validate,
+        columnValidationError: validationError,
+        columnMultipleSelection: multipleSelection,
+        columnIsOther: isOther,
+        columnMakeSelectedQuestionRequired: makeSelectedQuestionRequired,
       };
 
   @override
@@ -126,27 +149,26 @@ class SurveyQuestionAnswerChoice {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SurveyQuestionAnswerChoice &&
-              runtimeType == other.runtimeType &&
-              id == other.id &&
-              surveyQuestionId == other.surveyQuestionId &&
-              label == other.label &&
-              questionType == other.questionType &&
-              axis == other.axis &&
-              matrixColumnType == other.matrixColumnType &&
-              index == other.index &&
-              minLength == other.minLength &&
-              maxLength == other.maxLength &&
-              minValue == other.minValue &&
-              maxValue == other.maxValue &&
-              minDate == other.minDate &&
-              maxDate == other.maxDate &&
-              validate == other.validate &&
-              validationError == other.validationError &&
-              multipleSelection == other.multipleSelection &&
-              isOther == other.isOther &&
-              makeSelectedQuestionRequired ==
-                  other.makeSelectedQuestionRequired;
+      other is SurveyQuestionAnswerChoice &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          surveyQuestionId == other.surveyQuestionId &&
+          label == other.label &&
+          questionType == other.questionType &&
+          axis == other.axis &&
+          matrixColumnType == other.matrixColumnType &&
+          index == other.index &&
+          minLength == other.minLength &&
+          maxLength == other.maxLength &&
+          minValue == other.minValue &&
+          maxValue == other.maxValue &&
+          minDate == other.minDate &&
+          maxDate == other.maxDate &&
+          validate == other.validate &&
+          validationError == other.validationError &&
+          multipleSelection == other.multipleSelection &&
+          isOther == other.isOther &&
+          makeSelectedQuestionRequired == other.makeSelectedQuestionRequired;
 
   @override
   int get hashCode =>
@@ -168,8 +190,4 @@ class SurveyQuestionAnswerChoice {
       multipleSelection.hashCode ^
       isOther.hashCode ^
       makeSelectedQuestionRequired.hashCode;
-
-
-
-
 }

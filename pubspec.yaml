@@ -32,6 +32,7 @@ dependencies:
   progress_hud_v2: ^2.0.0
   uuid: ^2.0.0
   preload_page_view: ^0.1.4
+  flushbar: ^1.4.0
 
 dev_dependencies:
   flutter_test:

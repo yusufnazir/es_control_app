@@ -1,16 +1,22 @@
 import 'dart:async';
 
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_response_answer_model.dart';
+import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
 import 'package:es_control_app/widgets/question_card_header.dart';
 import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flutter/material.dart';
 
 class QuestionTypeSingle extends StatefulWidget {
   final SurveyQuestion surveyQuestion;
-  final StreamController<Map<int, bool>> streamController;
+  final SurveyResponse surveyResponse;
+  final StreamController<StreamControllerBeanChoice> streamController;
+  final int requiredQuestionId;
 
-  QuestionTypeSingle(this.surveyQuestion, this.streamController);
+  QuestionTypeSingle(
+      this.surveyResponse, this.surveyQuestion, this.streamController, this.requiredQuestionId);
 
   @override
   State<StatefulWidget> createState() {
@@ -19,23 +25,49 @@ class QuestionTypeSingle extends StatefulWidget {
 }
 
 class QuestionTypeSingleState extends State<QuestionTypeSingle> {
-
   bool visible = false;
+  SurveyResponseAnswer surveyResponseAnswer;
+  TextEditingController textEditingController = TextEditingController();
+  FocusNode focusNode = FocusNode();
+  bool focussed = false;
+  String oldValue = "";
 
   @override
   void initState() {
     super.initState();
-    widget.streamController.stream.listen((data) {
-      setState(() {
-        if (data.containsKey(widget.surveyQuestion.id)) {
-          visible = data[widget.surveyQuestion.id];
+    widget.streamController.stream.listen(
+      (data) {
+        if (data.makeSelectedQuestionRequired == null) {
+          if(this.mounted) {
+            setState(() {
+              visible = false;
+            });
+          }
+        } else if (data.makeSelectedQuestionRequired ==
+            widget.surveyQuestion.id) {
+          if(this.mounted) {
+            setState(() {
+              visible = data.value;
+            });
+          }
         }
-      });
-    }, onDone: () {
-      print("Task Done");
-    }, onError: (error) {
-      print("Some Error");
+      },
+    );
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        focussed = true;
+      }
+      if (!focusNode.hasFocus && focussed) {
+        _updateText(textEditingController.text);
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,7 +76,18 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
   }
 
   buildSingleLayout() {
+    debugPrint("requiredQuestionId ${widget.requiredQuestionId}");
     checkIfQuestionIsDependant() async {
+      surveyResponseAnswer = await DBProvider.db
+          .getSurveyResponseAnswerForSingleTextByResponseAndQuestion(
+              widget.surveyResponse == null
+                  ? null
+                  : widget.surveyResponse.uniqueId,
+              widget.surveyQuestion.id);
+      if (surveyResponseAnswer != null) {
+        oldValue = surveyResponseAnswer.responseText;
+        textEditingController.text = surveyResponseAnswer.responseText;
+      }
       bool isDependant = await DBProvider.db
           .isSurveyQuestionDependant(widget.surveyQuestion.id);
       return isDependant;
@@ -64,12 +107,15 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
                   child: Card(
                     child: Column(
                       children: <Widget>[
-                        CardHeader(widget.surveyQuestion.question),
+                        CardHeader(widget.surveyQuestion, false,widget.requiredQuestionId),
                         Padding(
                           padding: EdgeInsets.all(8.0),
                           child: TextField(
+                            focusNode: focusNode,
+                            controller: textEditingController,
                             keyboardType: TextInputType.multiline,
                             maxLines: null,
+                            maxLength: null,
                           ),
                         )
                       ],
@@ -88,5 +134,14 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
         });
 
     return futureBuilder;
+  }
+
+  _updateText(String value) {
+    focussed = false;
+    if (oldValue.compareTo(value) != 0) {
+      oldValue = value;
+      DBProvider.db.updateSurveyResponseAnswerForSingleText(
+          widget.surveyResponse.uniqueId, widget.surveyQuestion.id, value);
+    }
   }
 }

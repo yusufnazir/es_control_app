@@ -1,3 +1,4 @@
+import 'package:es_control_app/repository/survey_repository.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/survey_forms_page.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,6 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
 
   getSurveys() async {
     List<Survey> surveys = await DBProvider.db.getAllSurveys();
-//    debugPrint("List of surveys $surveys");
     setState(() {
       this.surveys.addAll(surveys);
     });
@@ -90,7 +90,6 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                             setState(() {
                               present = 0;
                               surveys.clear();
-                              debugPrint("resyncing surveys");
                               _reSync();
                             });
                             Navigator.of(context).pop(ConfirmAction.ACCEPT);
@@ -99,7 +98,6 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                       ],
                     );
                   });
-
             },
           )
         ],
@@ -141,12 +139,10 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
 
   _reSync() async {
     await RestApi().getSurveysFromServerAndStoreInDB();
-    debugPrint("Retrieved from the server and stored in the database");
     await getSurveys();
   }
 
   _navigateToSurvey(BuildContext context, Survey survey) {
-    debugPrint(survey.toString());
     Navigator.of(context).push(
         new MaterialPageRoute(builder: (context) => new SurveyPage(survey)));
   }

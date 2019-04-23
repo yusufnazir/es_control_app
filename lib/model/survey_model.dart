@@ -1,15 +1,5 @@
 import 'dart:convert';
 
-Survey clientFromJson(String str) {
-  final jsonData = json.decode(str);
-  return Survey.fromJsonMap(jsonData);
-}
-
-String clientToJson(Survey data) {
-  final dyn = data.toDbMap();
-  return json.encode(dyn);
-}
-
 class Survey {
   int id;
   String name;
@@ -22,6 +12,16 @@ class Survey {
     this.description,
     this.active,
   });
+
+  Survey clientFromJson(String str) {
+    final jsonData = json.decode(str);
+    return Survey.fromJsonMap(jsonData);
+  }
+
+  String clientToJson(Survey data) {
+    final dyn = data.toDbMap();
+    return json.encode(dyn);
+  }
 
   factory Survey.fromJsonMap(Map<String, dynamic> json) => new Survey(
         id: json["id"],

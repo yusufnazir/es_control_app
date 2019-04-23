@@ -6,6 +6,7 @@ class Constants{
 
   static Color primaryColor = const Color(0xFF33691e);
   static Color primaryColorLight = const Color(0xFF629749);
+  static Color primaryColorLighter = const Color(0xFFD3FFBF);
   static Color accentColor = const Color(0xFFffd600);
   static Color accentColorLight = const Color(0xFFffff52);
   static Color kShrinePink50 = const Color(0xFFFEEAE6);

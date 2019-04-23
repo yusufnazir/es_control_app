@@ -3,16 +3,22 @@ import 'dart:async';
 import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
+import 'package:es_control_app/survey/choice_checkbox_list_tile.dart';
 import 'package:es_control_app/widgets/question_card_header.dart';
 import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flutter/material.dart';
 
 class QuestionTypeChoice extends StatefulWidget {
+  final SurveyResponse surveyResponse;
   final SurveyQuestion surveyQuestion;
-  final StreamController<Map<int,bool>> streamController;
+  final StreamController<StreamControllerBeanChoice> streamController;
+  final int requiredQuestionId;
 
-  QuestionTypeChoice(this.surveyQuestion, this.streamController);
+  QuestionTypeChoice(
+      this.surveyResponse, this.surveyQuestion, this.streamController,this.requiredQuestionId);
 
   @override
   State<StatefulWidget> createState() {
@@ -21,8 +27,13 @@ class QuestionTypeChoice extends StatefulWidget {
 }
 
 class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
+  List commentWidgets;
 
-  Map<SurveyQuestionAnswerChoice, bool> choicesSelected = {};
+  @override
+  void initState() {
+    super.initState();
+    commentWidgets = List<ChoiceCheckboxListTile>();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,35 +41,16 @@ class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
   }
 
   FutureBuilder buildChoicesLayout() {
-    List commentWidgets = List<CheckboxListTile>();
     List<SurveyQuestionAnswerChoice> choices =
         List<SurveyQuestionAnswerChoice>();
-
-    Widget checkboxLisTile(SurveyQuestionAnswerChoice choice, String checkBoxTitle) {
-      bool value = choicesSelected[choice] == null
-          ? false
-          : choicesSelected[choice];
-      return CheckboxListTile(
-        key: Key(choice.toString()),
-        value: value,
-        title: Text(checkBoxTitle),
-        onChanged: (bool value) {
-          resetChoicesSelection();
-          if(choice.makeSelectedQuestionRequired!=null) {
-            widget.streamController.add({choice.makeSelectedQuestionRequired:value});
-          }
-          setState(() {
-            choicesSelected[choice] = value;
-          });
-        },
-      );
-    }
 
     loadChoices() async {
       choices = await DBProvider.db
           .getSurveyQuestionAnswerChoiceByQuestion(widget.surveyQuestion.id);
+      commentWidgets.clear();
       for (SurveyQuestionAnswerChoice choice in choices) {
-        commentWidgets.add(checkboxLisTile(choice, choice.label));
+        commentWidgets.add(ChoiceCheckboxListTile(widget.surveyResponse,
+            widget.surveyQuestion, choice, widget.streamController));
       }
       return commentWidgets;
     }
@@ -67,22 +59,22 @@ class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
         future: loadChoices(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            List<CheckboxListTile> commentWidgets = snapshot.data;
             return Padding(
-                padding: EdgeInsets.only(right: 8.0, left: 8.0),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(Constants.borderRadius)),
-                  child: Column(
-                    children: <Widget>[
-                      CardHeader(widget.surveyQuestion.question),
-                      Column(
-                        children: commentWidgets,
-                      )
-                    ],
+                  padding: EdgeInsets.only(right: 8.0, left: 8.0),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(Constants.borderRadius)),
+                    child: Column(
+                      children: <Widget>[
+                        CardHeader(widget.surveyQuestion, false, widget.requiredQuestionId),
+                         Column(
+                          children: commentWidgets,
+                        )
+                      ],
+                    ),
                   ),
-                ));
+            );
           } else {
             return SizedCircularProgressBar(
               height: 25,
@@ -91,16 +83,5 @@ class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
           }
         });
     return futureBuilder;
-  }
-
-  void resetChoicesSelection() {
-    if (!widget.surveyQuestion.multipleSelection) {
-      choicesSelected.forEach((key, value) {
-        choicesSelected[key] = false;
-        if(key.makeSelectedQuestionRequired!=null){
-          widget.streamController.add({key.makeSelectedQuestionRequired:false});
-        }
-      });
-    }
   }
 }

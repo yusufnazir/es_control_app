@@ -1,14 +1,21 @@
+import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/survey/question_type_matrix_cell_choice.dart';
+import 'package:es_control_app/survey/question_type_matrix_cell_text.dart';
+import 'package:es_control_app/util/matrix_column_types.dart';
+import 'package:es_control_app/widgets/question_card_header.dart';
 import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:es_control_app/widgets/question_card_header.dart';
 
 class QuestionTypeMatrix extends StatefulWidget {
   final SurveyQuestion surveyQuestion;
+  final SurveyResponse surveyResponse;
+  final int requiredQuestionId;
 
-  QuestionTypeMatrix(this.surveyQuestion);
+  QuestionTypeMatrix(this.surveyResponse, this.surveyQuestion, this.requiredQuestionId);
 
   @override
   State<StatefulWidget> createState() {
@@ -46,19 +53,38 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
               .where((surveyQuestionAnswerChoice) =>
                   (surveyQuestionAnswerChoice.axis == column))
               .toList();
+          Map columnWidths = Map<int, TableColumnWidth>();
+          int i = 0;
+          columns.forEach((p) {
+            if (p.matrixColumnType == single_composite_selection) {
+//              columnWidths[i] = FixedColumnWidth(400.0);
+              columnWidths[i] = IntrinsicColumnWidth();
+            } else {
+              columnWidths[i] = FixedColumnWidth(150.0);
+            }
+            i++;
+          });
 
           List tableRows = List<TableRow>();
           Table table = Table(
-            columnWidths: const <int, TableColumnWidth>{
-              0: FixedColumnWidth(50.0),
-            },
+//            defaultColumnWidth: FixedColumnWidth(150),
+//            columnWidths: const <int, TableColumnWidth>{
+//              0: FixedColumnWidth(50.0),
+//            },
+            columnWidths: columnWidths,
             children: tableRows,
           );
           List headerCells = List<TableCell>();
           for (SurveyQuestionAnswerChoice column in columns) {
-            headerCells.add(TableCell(child: Text(column.label)));
+            headerCells.add(TableCell(
+                child: Text(
+              column.label,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            )));
           }
-          TableRow header = TableRow(children: headerCells);
+          TableRow header = TableRow(
+              children: headerCells,
+              decoration: BoxDecoration(color: Constants.primaryColorLight));
           tableRows.add(header);
 
           for (SurveyQuestionAnswerChoice row in rows) {
@@ -67,12 +93,13 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
               if (column.index == 0) {
                 rowCells.add(TableCell(
                   verticalAlignment: TableCellVerticalAlignment.middle,
-                  child: Text(row.label),
+                  child: Text(
+                    row.label,
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
                 ));
               } else {
-                rowCells.add(TableCell(
-                    child: Padding(
-                        padding: EdgeInsets.all(8.0), child: TextField())));
+                rowCells.add(_determineMatrixTypeCell(row, column));
               }
             }
             TableRow tableRow = TableRow(
@@ -84,12 +111,22 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
             padding: EdgeInsets.all(8.0),
             child: Card(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  CardHeader(widget.surveyQuestion.question),
+                  Container(
+                    color: Constants.accentColorLight,
+                    child:
+                        CardHeader(widget.surveyQuestion, true, widget.requiredQuestionId),
+                  ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: table,
-                  )
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: <Widget>[table],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -103,5 +140,23 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
       },
     );
     return futureBuilder;
+  }
+
+  _determineMatrixTypeCell(
+      SurveyQuestionAnswerChoice row, SurveyQuestionAnswerChoice column) {
+    switch (column.matrixColumnType) {
+      case single_composite_selection:
+        return TableCell(
+            child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: MatrixCellChoice(widget.surveyResponse,
+                    widget.surveyQuestion, row, column)));
+      case text:
+        return TableCell(
+            child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: MatrixCellText(widget.surveyResponse,
+                    widget.surveyQuestion, row, column)));
+    }
   }
 }

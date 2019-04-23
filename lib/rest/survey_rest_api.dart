@@ -7,6 +7,11 @@ import 'package:es_control_app/model/survey_question_answer_choice_selection_mod
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/pojo/survey_pojo.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/repository/survey_group_repository.dart';
+import 'package:es_control_app/repository/survey_question_answer_choice_repository.dart';
+import 'package:es_control_app/repository/survey_question_answer_choice_selection_repository.dart';
+import 'package:es_control_app/repository/survey_question_repository.dart';
+import 'package:es_control_app/repository/survey_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -18,8 +23,9 @@ class RestApi {
     try {
       cleanUpDatabase();
       var response = await http
-          .get("http://192.168.0.103:9300/escontrol/rest/api/v1/surveys/");
-//    .get("http://10.10.10.101:9300/escontrol/rest/api/v1/surveys/");
+          .get("http://192.168.0.105:9300/escontrol/rest/api/v1/surveys/");
+//    .get("http://10.10.10.100:9300/escontrol/rest/api/v1/surveys/");
+//          .get("http://192.168.1.9:9300/escontrol/rest/api/v1/surveys/");
 //      debugPrint(response.body);
       List<SurveyPojo> surveyPojos = parseSurveys(response.body);
       if (surveyPojos != null) {
@@ -28,23 +34,18 @@ class RestApi {
           await manageSurvey(survey);
 
           List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
+          debugPrint("surveyGroups $surveyGroups");
           await manageSurveyGroups(surveyGroups);
 
           List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;
-          debugPrint(
-              "Surveyquestions size from server ${surveyQuestions.length}");
           await manageSurveyQuestions(surveyQuestions);
 
           List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices =
               surveyPojo.surveyQuestionAnswerChoices;
-          debugPrint(
-              "SurveyQuestionAnswerChoices size from server ${surveyQuestionAnswerChoices.length}");
           await manageSurveyQuestionAnswerChoices(surveyQuestionAnswerChoices);
 
           List<SurveyQuestionAnswerChoiceSelection> surveyQuestionAnswerChoiceSelections =
               surveyPojo.surveyQuestionAnswerChoiceSelections;
-          debugPrint(
-              "SurveyQuestionAnswerChoiceSelections size from server ${surveyQuestionAnswerChoiceSelections.length}");
           await manageSurveyQuestionAnswerChoiceSelections(surveyQuestionAnswerChoiceSelections);
         }
       }
@@ -65,7 +66,6 @@ class RestApi {
 
   manageSurvey(Survey survey) async {
     Survey existingSurvey = await DBProvider.db.getSurvey(survey.id);
-//    debugPrint("Does survey exist ${existingSurvey != null}");
     if (existingSurvey == null) {
       await DBProvider.db.createSurvey(survey);
     } else {
@@ -93,7 +93,6 @@ class RestApi {
         SurveyQuestion existingSurveyQuestion =
             await DBProvider.db.getSurveyQuestion(surveyQuestion.id);
         if (existingSurveyQuestion == null) {
-//          debugPrint("Creating survey question $surveyQuestion");
           await DBProvider.db.createSurveyQuestion(surveyQuestion);
         } else {
           await DBProvider.db.updateSurveyQuestion(surveyQuestion);
@@ -111,7 +110,6 @@ class RestApi {
             await DBProvider.db
                 .getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
         if (existingSurveyQuestionAnswerChoice == null) {
-//          debugPrint("Creating survey question $surveyQuestion");
           await DBProvider.db
               .createSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
         } else {
@@ -133,7 +131,6 @@ class RestApi {
                 .getSurveyQuestionAnswerChoiceSelection(
                     surveyQuestionAnswerChoiceSelection.id);
         if (existingSurveyQuestionAnswerChoiceSelection == null) {
-//          debugPrint("Creating survey question $surveyQuestion");
           await DBProvider.db.createSurveyQuestionAnswerChoiceSelection(
               surveyQuestionAnswerChoiceSelection);
         } else {
