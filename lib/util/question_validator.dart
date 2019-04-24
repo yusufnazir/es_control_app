@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 
 class QuestionValidator {
   List<int> questionsToSkip = List<int>();
-  Map<int, int> requiredQuestionsGroupMap = Map<int, int>();
+  Map<int, int> _requiredQuestionsGroupMap = Map<int, int>();
   final String surveyResponseUniqueId;
+  SurveyQuestion _surveyQuestion;
   final int surveyId;
 
   QuestionValidator(this.surveyId, this.surveyResponseUniqueId);
@@ -19,7 +20,6 @@ class QuestionValidator {
     for (SurveyQuestion surveyQuestion in allSurveyQuestions) {
       await validateSurveyQuestion(surveyQuestion);
     }
-    return requiredQuestionsGroupMap;
   }
 
   void validateSurveyQuestion(SurveyQuestion surveyQuestion) async {
@@ -49,21 +49,25 @@ class QuestionValidator {
     if (surveyResponseAnswer == null ||
         surveyResponseAnswer.responseText == null ||
         surveyResponseAnswer.responseText.trim().isEmpty) {
-      requiredQuestionsGroupMap[surveyQuestion.id] = surveyQuestion.groupId;
+      this._surveyQuestion = surveyQuestion;
+      this._requiredQuestionsGroupMap[surveyQuestion.id] =
+          surveyQuestion.groupId;
       return;
     }
   }
 
   void validateChoices(SurveyQuestion surveyQuestion) async {
-    debugPrint("surveyQuestion $surveyQuestion");
+//    debugPrint("surveyQuestion $surveyQuestion");
     bool multipleSelection = surveyQuestion.multipleSelection;
     if (!multipleSelection) {
       List<SurveyResponseAnswer> surveyResponseAnswers = await DBProvider.db
           .getSurveyResponseAnswerForChoicesByResponseAndQuestion(
               surveyResponseUniqueId, surveyQuestion.id);
-      debugPrint("surveyResponseAnswers ${surveyResponseAnswers.length}");
+//      debugPrint("surveyResponseAnswers ${surveyResponseAnswers.length}");
       if (surveyResponseAnswers == null || surveyResponseAnswers.length == 0) {
-        requiredQuestionsGroupMap[surveyQuestion.id] = surveyQuestion.groupId;
+        this._surveyQuestion = surveyQuestion;
+        this._requiredQuestionsGroupMap[surveyQuestion.id] =
+            surveyQuestion.groupId;
         return;
       } else {
         SurveyResponseAnswer surveyResponseAnswer = surveyResponseAnswers[0];
@@ -75,11 +79,25 @@ class QuestionValidator {
             (isOther &&
                 (surveyResponseAnswer.otherValue == null ||
                     surveyResponseAnswer.otherValue.trim().isEmpty))) {
-          requiredQuestionsGroupMap[surveyQuestion.id] = surveyQuestion.groupId;
+          this._surveyQuestion = surveyQuestion;
+          this._requiredQuestionsGroupMap[surveyQuestion.id] =
+              surveyQuestion.groupId;
           return;
         }
       }
     }
+  }
+
+  SurveyQuestion get surveyQuestion => _surveyQuestion;
+
+  set surveyQuestion(SurveyQuestion value) {
+    _surveyQuestion = value;
+  }
+
+  Map<int, int> get requiredQuestionsGroupMap => _requiredQuestionsGroupMap;
+
+  set requiredQuestionsGroupMap(Map<int, int> value) {
+    _requiredQuestionsGroupMap = value;
   }
 
   validateMatrix(SurveyQuestion surveyQuestion) {}

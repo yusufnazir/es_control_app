@@ -1,6 +1,10 @@
 import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/form_card.dart';
+import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
+import 'package:es_control_app/util/question_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:progress_hud_v2/progress_hud.dart';
 import 'package:uuid/uuid.dart';
 
 import 'model/survey_model.dart';
@@ -23,12 +27,22 @@ enum ConfirmAction { CANCEL, ACCEPT }
 class SurveyPageState extends State<SurveyPage> {
   final _formKey = GlobalKey<FormState>();
   List<SurveyResponse> surveyResponses;
+  ProgressHUD _progressHUD;
+  bool _loading = false;
 
   @override
   void initState() {
-    super.initState();
+    _progressHUD = new ProgressHUD(
+      loading: _loading,
+      backgroundColor: Colors.black12,
+      color: Colors.white,
+      containerColor: Constants.primaryColor,
+      borderRadius: 5.0,
+      text: 'Uploading...',
+    );
     surveyResponses = List<SurveyResponse>();
     getSurveyResponses();
+    super.initState();
   }
 
   @override
@@ -62,73 +76,51 @@ class SurveyPageState extends State<SurveyPage> {
           },
           child: Icon(Icons.add),
         ),
-        body: Column(children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: surveyCard,
-          ),
-          Expanded(
-              child: ListView.builder(
-                  itemCount: surveyResponses.length,
-                  itemBuilder: (context, position) {
-                    return Card(
+        body: Stack(
+          children: <Widget>[
+            Column(children: <Widget>[
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: surveyCard,
+              ),
+              Expanded(
+                  child: ListView.builder(
+                      itemCount: surveyResponses.length,
+                      itemBuilder: (context, position) {
+                        return Card(
 //                        color: Color.fromRGBO(58, 66, 86, 1.0),
-                        color: Constants.primaryColorLight,
-                        child: Column(children: <Widget>[
-                          Divider(height: 5.0),
-                          createFormListTile(
-                              surveyResponses[position], position)
-                        ]));
-                  }))
-        ]));
+                            color: Constants.primaryColorLight,
+                            child: Column(children: <Widget>[
+                              Divider(height: 5.0),
+                              createFormListTile(
+                                  surveyResponses[position], position)
+                            ]));
+                      }))
+            ]),
+            _progressHUD
+          ],
+        ));
   }
 
   createFormListTile(SurveyResponse surveyResponse, int position) {
-    return ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        leading: Container(
-          padding: EdgeInsets.only(right: 12.0),
-          decoration: new BoxDecoration(
-              border: new Border(
-                  right: new BorderSide(width: 1.0, color: Colors.white24))),
-          child: Icon(Icons.cloud_upload, color: Colors.white),
-        ),
-        title: Text(
-          surveyResponse.formName,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 22.0,
-          ),
-        ),
-        // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
-
-        subtitle: Row(
-          children: <Widget>[
-            Icon(Icons.date_range, color: Colors.yellowAccent),
-            Text(" ${surveyResponse.createdOn}", style: TextStyle(color: Colors.white))
-          ],
-        ),
-        trailing: IconButton(
-          onPressed: () {
-            surveyFormSelected(context, surveyResponses[position]);
-          },
-          icon: Icon(
-            Icons.keyboard_arrow_right,
-            color: Colors.white,
-            size: 30.0,
-          ),
-          padding: EdgeInsets.all(0.0),
-        )
-//        trailing:Icon(Icons.keyboard_arrow_right, color: Colors.white, size: 30.0)
-        );
+    return FormCardTile(
+      prepareForUpload: (Function callback) async{
+        await surveyFormSelectedForValidation(context, surveyResponses[position],callback);
+      },
+      surveyFormSelected: () {
+        surveyFormSelected(context, surveyResponses[position]);
+      },
+      surveyResponse: surveyResponse,
+    );
   }
 
   void createNewFormLayout(BuildContext context) {
     TextEditingController formNameController = TextEditingController();
 
     TextFormField formNameField = TextFormField(
-      decoration: InputDecoration(labelText: "Form name"),
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+          labelText: "Form name", labelStyle: TextStyle(color: Colors.white)),
       controller: formNameController,
     );
 
@@ -154,23 +146,28 @@ class SurveyPageState extends State<SurveyPage> {
         context: context,
         builder: (BuildContext buildContext) {
           return AlertDialog(
+              backgroundColor: Constants.primaryColor,
               contentPadding: EdgeInsets.all(0.0),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0)),
               title: Text(
                 "Create a new form",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.indigo),
+                style: TextStyle(color: Colors.green),
               ),
               actions: <Widget>[
                 FlatButton(
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.red, fontSize: 20),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop(ConfirmAction.CANCEL);
                   },
                 ),
                 FlatButton(
-                  child: const Text('Submit'),
+                  child: const Text('Submit',
+                      style: TextStyle(color: Colors.white, fontSize: 20)),
                   onPressed: () {
                     createNewForm();
                     Navigator.of(context).pop(ConfirmAction.ACCEPT);
@@ -196,6 +193,65 @@ class SurveyPageState extends State<SurveyPage> {
         });
   }
 
+  void createUploadFormConfirmationLayout(
+      BuildContext context, SurveyResponse surveyResponse,Function callback) {
+    void uploadForm(Function callback) async{
+      await new Future.delayed(const Duration(seconds: 1));
+      callback();
+      toggleProgressHUD();
+//      SurveyResponse surveyResponse = new SurveyResponse();
+//      Uuid uuid = Uuid();
+//      String uniqueId = uuid.v4();
+//      surveyResponse.uniqueId = uniqueId;
+//      surveyResponse.surveyId = widget.survey.id;
+//      surveyResponse.createdOn = DateTime.now();
+//      await DBProvider.db.createSurveyResponse(surveyResponse);
+//      List<SurveyResponse> surveyResponses =
+//          await DBProvider.db.getAllSurveyResponses(widget.survey.id);
+    }
+
+    showDialog(
+        context: context,
+        builder: (BuildContext buildContext) {
+          return AlertDialog(
+            backgroundColor: Constants.primaryColor,
+            contentPadding: EdgeInsets.all(0.0),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0)),
+            title: Text(
+              "Upload your completed form!",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.green),
+            ),
+            actions: <Widget>[
+              Row(
+                children: <Widget>[
+                  FlatButton(
+                    child: const Text('Cancel',
+                        style: TextStyle(fontSize: 20, color: Colors.red)),
+                    onPressed: () {
+                      Navigator.of(context).pop(ConfirmAction.CANCEL);
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text(
+                      'Upload',
+                      style: TextStyle(fontSize: 20, color: Colors.white),
+                    ),
+                    onPressed: () {
+                      toggleProgressHUD();
+                      uploadForm(callback);
+                      Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                    },
+                  )
+                ],
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              )
+            ],
+          );
+        });
+  }
+
   void getSurveyResponses() async {
     List<SurveyResponse> surveyResponses =
         await DBProvider.db.getAllSurveyResponses(widget.survey.id);
@@ -206,7 +262,37 @@ class SurveyPageState extends State<SurveyPage> {
 
   surveyFormSelected(BuildContext context, SurveyResponse surveyResponse) {
     Navigator.of(context).push(new MaterialPageRoute(
-        builder: (context) =>
-            new SurveyFormQuestionsPage(widget.survey, surveyResponse)));
+        builder: (context) => new SurveyFormQuestionsPage(
+              survey: widget.survey,
+              surveyResponse: surveyResponse,
+            )));
+  }
+
+  surveyFormSelectedForValidation(
+      BuildContext context, SurveyResponse surveyResponse,Function callback) async {
+    QuestionValidator questionValidator =
+        QuestionValidator(widget.survey.id, surveyResponse.uniqueId);
+    await questionValidator.validateQuestions();
+    SurveyQuestion surveyQuestion = questionValidator.surveyQuestion;
+    if (surveyQuestion != null) {
+      Navigator.of(context).push(new MaterialPageRoute(
+          builder: (context) => new SurveyFormQuestionsPage(
+              survey: widget.survey,
+              surveyResponse: surveyResponse,
+              surveyQuestionRequired: surveyQuestion)));
+    } else {
+      createUploadFormConfirmationLayout(context, surveyResponse, callback);
+    }
+  }
+
+  void toggleProgressHUD() {
+//    setState(() {
+    if (_loading) {
+      _progressHUD.state.dismiss();
+    } else {
+      _progressHUD.state.show();
+    }
+    _loading = !_loading;
+//    });
   }
 }

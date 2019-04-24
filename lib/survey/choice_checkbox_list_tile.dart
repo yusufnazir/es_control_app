@@ -102,7 +102,7 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
     }
     int makeSelectedQuestionRequired =
         widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired;
-    if (makeSelectedQuestionRequired != null) {
+    if (makeSelectedQuestionRequired != null && !widget.streamController.isClosed) {
       widget.streamController.add(
         StreamControllerBeanChoice(
             choiceId: widget.surveyQuestionAnswerChoice.id,
@@ -128,7 +128,7 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
           value: value,surveyQuestionId: widget.surveyQuestion.id),
     );
     if (this.mounted) {
-      debugPrint("isOther ${widget.surveyQuestionAnswerChoice.isOther}");
+//      debugPrint("isOther ${widget.surveyQuestionAnswerChoice.isOther}");
       if(widget.surveyQuestionAnswerChoice.isOther){
         isOtherFieldVisible = value;
       }

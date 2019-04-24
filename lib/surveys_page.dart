@@ -1,3 +1,4 @@
+import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/repository/survey_repository.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/survey_forms_page.dart';
@@ -27,7 +28,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
     _progressHUD = new ProgressHUD(
       backgroundColor: Colors.black12,
       color: Colors.white,
-      containerColor: Colors.blue,
+      containerColor: Constants.primaryColor,
       borderRadius: 5.0,
       text: 'Loading...',
     );

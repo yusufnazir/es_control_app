@@ -34,7 +34,7 @@ class RestApi {
           await manageSurvey(survey);
 
           List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
-          debugPrint("surveyGroups $surveyGroups");
+//          debugPrint("surveyGroups $surveyGroups");
           await manageSurveyGroups(surveyGroups);
 
           List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;

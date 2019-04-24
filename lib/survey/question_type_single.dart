@@ -76,7 +76,7 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
   }
 
   buildSingleLayout() {
-    debugPrint("requiredQuestionId ${widget.requiredQuestionId}");
+//    debugPrint("requiredQuestionId ${widget.requiredQuestionId}");
     checkIfQuestionIsDependant() async {
       surveyResponseAnswer = await DBProvider.db
           .getSurveyResponseAnswerForSingleTextByResponseAndQuestion(

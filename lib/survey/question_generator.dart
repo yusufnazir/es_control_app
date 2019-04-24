@@ -52,7 +52,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     if (surveyResponseGroup != null) {
       if (this.mounted) {
         setState(() {
-          debugPrint("getSurveyGroupApplicability");
+//          debugPrint("getSurveyGroupApplicability");
           groupSelected = surveyResponseGroup.applicable;
         });
       }
@@ -85,7 +85,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     if (enableApplicability == null) {
       enableApplicability = false;
     }
-    debugPrint("surveyGroup ${widget.surveyGroup}");
+//    debugPrint("surveyGroup ${widget.surveyGroup}");
     return Card(
         shape: BeveledRectangleBorder(),
         color: Theme.of(context).primaryColorLight,

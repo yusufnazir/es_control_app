@@ -15,4 +15,7 @@ class Constants{
   static Color kShrineErrorRed = const Color(0xFFC5032B);
   static Color cardHeaderColor = const Color(0xFFffd740);
   static Color kShrineBackgroundWhite = Colors.white;
+
+  static Color dark = const Color(0xFF3B4254);
+  static Color accent = const Color(0xFF32C4E6);
 }

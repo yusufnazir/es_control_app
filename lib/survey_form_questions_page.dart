@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/survey/question_generator.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:preload_page_view/preload_page_view.dart';
+import 'package:uuid/uuid.dart';
 
 import 'model/survey_question_model.dart';
 import 'model/survey_response_model.dart';
@@ -16,9 +18,11 @@ import 'repository/db_provider.dart';
 class SurveyFormQuestionsPage extends StatefulWidget {
   final Survey survey;
   final SurveyResponse surveyResponse;
+  final SurveyQuestion surveyQuestionRequired;
   final Map<int, Color> map = {};
 
-  SurveyFormQuestionsPage(this.survey, this.surveyResponse);
+  SurveyFormQuestionsPage(
+      {this.survey, this.surveyResponse, this.surveyQuestionRequired});
 
   @override
   State<StatefulWidget> createState() {
@@ -34,6 +38,7 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   Map<int, List<SurveyQuestion>> questionGroups;
   var drawerQuestionListing;
   int requiredQuestionId;
+  SurveyQuestion surveyQuestionRequired;
 
   SurveyFormQuestionsPageState();
 
@@ -45,6 +50,7 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   @override
   void initState() {
     super.initState();
+    this.surveyQuestionRequired=widget.surveyQuestionRequired;
     getSurveyQuestions();
   }
 
@@ -74,7 +80,7 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
             IconButton(
               icon: Icon(Icons.spellcheck),
               onPressed: () {
-                validateResponseAnswers();
+                validateResponseAnswers(context);
               },
             ),
             IconButton(
@@ -144,10 +150,15 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
       SurveyGroup surveyGroup = await DBProvider.db.getSurveyGroup(groupId);
       surveyGroups.add(surveyGroup);
     }
-    surveyQuestions.addAll(questions);
     setState(() {
-      debugPrint("getSurveyQuestions");
+      surveyQuestions.addAll(questions);
     });
+
+    if (widget.surveyQuestionRequired != null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => validateResponseAnswers(context));
+    }
+
     return questions;
   }
 
@@ -207,47 +218,76 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
     super.dispose();
   }
 
-  void validateResponseAnswers() async {
+  void validateResponseAnswers(BuildContext context) async {
+    debugPrint("surveyQuestionRequired ${widget.surveyQuestionRequired}");
     FocusScope.of(context).requestFocus(new FocusNode());
-    QuestionValidator questionValidator =
-        QuestionValidator(widget.survey.id, widget.surveyResponse.uniqueId);
-    Map<int, int> requiredQuestionGroups =
-        await questionValidator.validateQuestions();
-    if (requiredQuestionGroups != null && requiredQuestionGroups.isNotEmpty) {
+
+//    SurveyQuestion surveyQuestion;
+    if (surveyQuestionRequired == null) {
+      QuestionValidator questionValidator =
+          QuestionValidator(widget.survey.id, widget.surveyResponse.uniqueId);
+      await questionValidator.validateQuestions();
+      surveyQuestionRequired = questionValidator.surveyQuestion;
+    } else {
+      surveyQuestionRequired = widget.surveyQuestionRequired;
+    }
+
+    if (surveyQuestionRequired != null) {
       setState(() {
-        requiredQuestionId = requiredQuestionGroups.keys.elementAt(0);
+        requiredQuestionId = surveyQuestionRequired.id;
       });
-      int groupId = requiredQuestionGroups[requiredQuestionId];
+      int groupId = surveyQuestionRequired.groupId;
       SurveyGroup surveyGroup = surveyGroups
           .firstWhere((SurveyGroup surveyGroup) => surveyGroup.id == groupId);
       int indexOf = surveyGroups.indexOf(surveyGroup);
       _preLoadController.jumpToPage(indexOf);
 
-      SurveyQuestion surveyQuestion = surveyQuestions.firstWhere(
-          (SurveyQuestion surveyQuestion) =>
-              surveyQuestion.id == requiredQuestionId);
-
-      Flushbar(isDismissible: true,dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+      Flushbar(
+        duration: Duration(seconds: 4),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
         title: "Required question",
         icon: Icon(
           Icons.info_outline,
-          color: Colors.white,),
+          color: Colors.white,
+        ),
         message:
-            "Please review the following question: ${surveyQuestion.question}",
-        backgroundColor: Colors.red,duration: Duration(seconds: 5),
+            "Please review the following question: ${surveyQuestionRequired.question}",
+        backgroundColor: Colors.red,
         boxShadow: BoxShadow(
           color: Colors.red[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
         ),
       )..show(context);
+      surveyQuestionRequired = null;
     } else {
-      final snackBar = SnackBar(
-        content: Text('All required questions have been filled.'),
-      );
-
-      // Find the Scaffold in the Widget tree and use it to show a SnackBar!
-      _scaffoldKey.currentState.showSnackBar(snackBar);
+      Flushbar(duration: Duration(seconds: 3),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "Nothing to validate.",
+        message: "All required questions have been filled.",
+        backgroundGradient: LinearGradient(
+          colors: [
+            Constants.primaryColorLight,
+            Constants.primaryColor
+          ],
+        ),
+        boxShadow: BoxShadow(
+          color: Colors.green[800],
+          offset: Offset(0.0, 2.0),
+          blurRadius: 3.0,
+        ),
+      )..show(context);
+//      final snackBar = SnackBar(
+//        content: Text('All required questions have been filled.'),
+//      );
+//      // Find the Scaffold in the Widget tree and use it to show a SnackBar!
+//      _scaffoldKey.currentState.showSnackBar(snackBar);
     }
   }
 }
