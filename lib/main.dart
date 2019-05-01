@@ -1,16 +1,15 @@
 // This sample shows adding an action to an [AppBar] that opens a shopping cart.
 
+import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/home.dart';
 import 'package:es_control_app/l10n/localizations.dart';
 import 'package:es_control_app/login/LoginPage.dart';
 import 'package:es_control_app/surveys_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:splashscreen/splashscreen.dart';
-import 'package:es_control_app/constants.dart';
 
 void main() {
-
   ThemeData _buildShrineTheme() {
     final ThemeData base = ThemeData.light();
     return base.copyWith(
@@ -42,7 +41,7 @@ void main() {
     supportedLocales: [Locale("en")],
     onGenerateTitle: (BuildContext context) =>
         AppLocalizations.of(context).title,
-    home: new MyApp(),
+    home: MyApp(),
     theme: _kShrineTheme,
     routes: {
       '/login': (context) => LoginPage(),
@@ -62,20 +61,44 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return new SplashScreen(
-        seconds: 1,
-        navigateAfterSeconds: new SurveysListingPage(),
-        title: new Text(
-          'Welcome In SplashScreen',
-          style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-        ),
-//        image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
-        backgroundColor: Colors.white,
-        styleTextUnderTheLoader: new TextStyle(),
-        photoSize: 100.0,
-        onClick: () => print("Flutter Egypt"),
-        loaderColor: Colors.red);
+    return FutureBuilder(
+        future: toLoginOrNot(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            return snapshot.data;
+          } else {
+            return Scaffold(
+                backgroundColor: Colors.white,
+                body:Center(child: Image.asset('images/es_controls.jpg'),) );
+          }
+        });
   }
+
+  toLoginOrNot() async {
+    await Future.delayed(Duration(seconds: 2));
+    String credentials = await FileStorage.readCredentials();
+    if (credentials == null || credentials.trim().isEmpty) {
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+    } else {
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/surveys', (Route<dynamic> route) => false);
+    }
+  }
+//    return new SplashScreen(
+//        seconds: 1,
+//        navigateAfterSeconds: new SurveysListingPage(),
+//        title: new Text(
+//          'Welcome In SplashScreen',
+//          style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+//        ),
+////        image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
+//        backgroundColor: Colors.white,
+//        styleTextUnderTheLoader: new TextStyle(),
+//        photoSize: 100.0,
+//        onClick: () => print("Flutter Egypt"),
+//        loaderColor: Colors.red);
+//  }
 }
 
 class AfterSplash extends StatelessWidget {

@@ -1,31 +1,56 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
+import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/file_storage.dart';
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:oauth2/oauth2.dart' as oauth2;
+import 'package:oauth2/oauth2.dart';
+import 'package:progress_hud_v2/progress_hud.dart';
 
 import 'FormType.dart';
-import 'package:es_control_app/rest/survey_rest_api.dart';
 
 class LoginPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => new _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+  TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
+
   final TextEditingController _emailFilter = new TextEditingController();
   final TextEditingController _passwordFilter = new TextEditingController();
   String _email = "";
   String _password = "";
   FormType _form = FormType
       .login; // our default setting is to login, and we should switch to creating an account when the user chooses to
+  int _state = 0;
+  Animation _animation;
+  AnimationController _controller;
+  ProgressHUD _progressHUD;
+  GlobalKey _globalKey = GlobalKey();
+  bool _loading = true;
+  double _width = double.maxFinite;
 
   _LoginPageState() {
     _emailFilter.addListener(_emailListen);
     _passwordFilter.addListener(_passwordListen);
+  }
+
+  @override
+  void initState() {
+    _progressHUD = new ProgressHUD(
+      loading: _loading,
+      backgroundColor: Colors.black12,
+      color: Colors.white,
+      containerColor: Constants.primaryColorLighter,
+      borderRadius: 5.0,
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 
   void _emailListen() {
@@ -57,88 +82,86 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: _buildBar(context),
-      body: new Container(
-        padding: EdgeInsets.all(16.0),
-        child: new Column(
-          children: <Widget>[
-            _buildTextFields(),
-            _buildButtons(),
-          ],
-        ),
+    final emailField = TextField(
+      controller: _emailFilter,
+      obscureText: false,
+      style: style,
+      decoration: InputDecoration(
+          contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+          hintText: "Email",
+          border:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
+    );
+    final passwordField = TextField(
+      controller: _passwordFilter,
+      obscureText: true,
+      style: style,
+      decoration: InputDecoration(
+          contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+          hintText: "Password",
+          border:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
+    );
+    final loginButton = Material(
+      elevation: 5.0,
+      borderRadius: BorderRadius.circular(30.0),
+      color: Constants.primaryColor,
+      child: MaterialButton(
+        minWidth: MediaQuery.of(context).size.width,
+        padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+        onPressed: () {
+          if (_state == 0) {
+            animateButton();
+          }
+        },
+        child: setUpButtonChild(),
       ),
     );
-  }
 
-  Widget _buildBar(BuildContext context) {
-    return new AppBar(
-      title: new Text("Simple Login Example"),
-      centerTitle: true,
-    );
-  }
-
-  Widget _buildTextFields() {
-    return new Container(
-      child: new Column(
+    return Scaffold(
+      body: Stack(
         children: <Widget>[
-          new Container(
-            child: new TextField(
-              controller: _emailFilter,
-              decoration: new InputDecoration(labelText: 'Email'),
-            ),
-          ),
-          new Container(
-            child: new TextField(
-              controller: _passwordFilter,
-              decoration: new InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
+          ListView(
+            children: <Widget>[
+              Center(
+                child: Container(
+                  key: _globalKey,
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(36.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+//                SizedBox(
+//                  height: 155.0,
+//                  child: Image.asset(
+//                    "assets/logo.png",
+//                    fit: BoxFit.contain,
+//                  ),
+//                ),
+                        SizedBox(height: 45.0),
+                        emailField,
+                        SizedBox(height: 25.0),
+                        passwordField,
+                        SizedBox(
+                          height: 35.0,
+                        ),
+                        loginButton,
+                        SizedBox(
+                          height: 15.0,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
           )
         ],
       ),
     );
   }
-
-  Widget _buildButtons() {
-    if (_form == FormType.login) {
-      return new Container(
-        child: new Column(
-          children: <Widget>[
-            new RaisedButton(
-              child: new Text('Login'),
-              onPressed: _loginPressed,
-            ),
-            new FlatButton(
-              child: new Text('Dont have an account? Tap here to register.'),
-              onPressed: _formChange,
-            ),
-            new FlatButton(
-              child: new Text('Forgot Password?'),
-              onPressed: _passwordReset,
-            )
-          ],
-        ),
-      );
-    } else {
-      return new Container(
-        child: new Column(
-          children: <Widget>[
-            new RaisedButton(
-              child: new Text('Create an Account'),
-              onPressed: _createAccountPressed,
-            ),
-            new FlatButton(
-              child: new Text('Have an account? Click here to login.'),
-              onPressed: _formChange,
-            )
-          ],
-        ),
-      );
-    }
-  }
-
-  // These functions can self contain any user auth logic required, they all have access to _email and _password
 
   void _loginPressed() {
     print('The user wants to login with $_email and $_password');
@@ -151,80 +174,115 @@ class _LoginPageState extends State<LoginPage> {
 //    );
   }
 
-  getSurveysFromServer(){
-      RestApi().getSurveysFromServerAndStoreInDB();
-  }
+  getSurveysFromServer() async {
+    // This URL is an endpoint that's provided by the authorization server. It's
+// usually included in the server's documentation of its OAuth2 API.
+    final authorizationEndpoint = Uri.parse(Constants.host + "oauth/token");
 
-  _launchURL() async {
-    const url = 'http://192.168.1.9:8082/ui/';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
+// The user should supply their own username and password.
+//    final username = "example user";
+//    final password = "example password";
 
-  Future<String> getQuote() async {
-//    Map jsonMap = {
-//      'data': {'scope': 'read',
-//        'response_type': 'code',
-//        'client_id': 'escontrol',
-//        'redirect_uri': 'http://192.168.1.9:9300/escontroler/app'},
-//    };
+// The authorization server may issue each client a separate client
+// identifier and secret, which allows the server to tell which client
+// is accessing it. Some servers may also have an anonymous
+// identifier/secret pair that any client may use.
 //
-//    String basicAuth =
-//        'Basic ' + base64Encode(utf8.encode('$_email:$_password'));
-//    HttpClient httpClient = new HttpClient();
-//    HttpClientRequest request = await httpClient.postUrl(Uri.parse('http://192.168.1.9:9300/escontroler/oauth/authorize'));
-//    request.headers.set('content-type', 'application/json');
-//    request.headers.set('accept', 'application/json');
-//    request.headers.set('authorization', basicAuth);
-//    request.add(utf8.encode(json.encode(jsonMap)));
-//    HttpClientResponse response = await request.close();
-//    // todo - you should check the response.statusCode
-//    String reply = await response.transform(utf8.decoder).join();
-//    httpClient.close();
-//    return reply;
+// Some servers don't require the client to authenticate itself, in which case
+// these should be omitted.
+    final identifier = "escontrol";
+    final secret = "escontrol";
 
-    String url = 'http://192.168.1.9:9300/escontroler/oauth/authorize';
-    String basicAuth =
-        'Basic ' + base64Encode(utf8.encode('$_email:$_password'));
-    var requestBody = {
-      'scope': 'read',
-      'response_type': 'code',
-      'client_id': 'escontrol',
-      'redirect_uri': 'http://192.168.1.9:9300/escontroler/app'
-    };
-    Map map = {
-      'data': {
-        'response_type': 'code',
-        'client_id': 'escontrol',
-        'redirect_uri': 'http://192.168.1.9:9300/escontroler/app',
-        'scope': 'read'
-      },
-    };
-    final response = await http.post(url,
-        headers: {
-//          HttpHeaders.contentTypeHeader: 'application/x-www-form-urlencoded',
-//          "Accept": "application/x-www-form-urlencoded",
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-          'authorization': basicAuth
-        },
-        encoding: Encoding.getByName("utf-8"),
-        body: requestBody);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load post');
+// Make a request to the authorization endpoint that will produce the fully
+// authenticated Client.
+    try {
+      debugPrint("_email $_email");
+      debugPrint("_password $_password");
+      var client = await oauth2.resourceOwnerPasswordGrant(
+          authorizationEndpoint, _email, _password,
+          identifier: identifier, secret: secret);
+      debugPrint("Client $client");
+      FileStorage.writeCredentials(client.credentials.toJson());
+      FileStorage.writeUsername(_email);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/surveys', (Route<dynamic> route) => false);
+    } catch (e) {
+      print(e.toString());
+      setState(() {
+        _state = 0;
+      });
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "Login error.",
+        message: "Please check your credentials and try again.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.red[400], Colors.red[600]],
+        ),
+        boxShadow: BoxShadow(
+          color: Colors.red[800],
+          offset: Offset(0.0, 2.0),
+          blurRadius: 3.0,
+        ),
+      )..show(context);
     }
+
+//    var string = new File("~/.escontrol/credentials.json").readAsStringSync();
+//    oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(string));
+
+// Once you have the client, you can use it just like any other HTTP client.
+//    var result = await client.read("http://example.com/protected-resources.txt");
+
+// Once we're done with the client, save the credentials file. This will allow
+// us to re-use the credentials and avoid storing the username and password
+// directly.
+
+//      RestApi().getSurveysFromServerAndStoreInDB();
   }
 
-  void _createAccountPressed() {
-    print('The user wants to create an accoutn with $_email and $_password');
+  void animateButton() {
+    double initialWidth = _globalKey.currentContext.size.width;
+
+    _controller =
+        AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+
+    _animation = Tween(begin: 0.0, end: 1).animate(_controller)
+      ..addListener(() {
+        setState(() {
+          _width = initialWidth - ((initialWidth - 48) * _animation.value);
+        });
+      });
+    _controller.forward();
+
+    setState(() {
+      _state = 1;
+    });
+    getSurveysFromServer();
   }
 
-  void _passwordReset() {
-    print("The user wants a password reset request sent to $_email");
+  setUpButtonChild() {
+    if (_state == 0) {
+      return Text(
+        "Click Here",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+        ),
+      );
+    } else if (_state == 1) {
+      return SizedBox(
+        height: 36,
+        width: 36,
+        child: CircularProgressIndicator(
+          value: null,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    } else {
+      return Icon(Icons.check, color: Colors.white);
+    }
   }
 }

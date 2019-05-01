@@ -1,19 +1,18 @@
 import 'dart:convert';
 
+import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/pojo/survey_pojo.dart';
 import 'package:es_control_app/repository/db_provider.dart';
-import 'package:es_control_app/repository/survey_group_repository.dart';
-import 'package:es_control_app/repository/survey_question_answer_choice_repository.dart';
-import 'package:es_control_app/repository/survey_question_answer_choice_selection_repository.dart';
-import 'package:es_control_app/repository/survey_question_repository.dart';
-import 'package:es_control_app/repository/survey_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:oauth2/oauth2.dart' as oauth2;
 
 class RestApi {
   /* Retrieves the surveys from the server and stores this in database.
@@ -22,8 +21,11 @@ class RestApi {
   getSurveysFromServerAndStoreInDB() async {
     try {
       cleanUpDatabase();
-      var response = await http
-          .get("http://192.168.0.105:9300/escontrol/rest/api/v1/surveys/");
+      String credentials = await FileStorage.readCredentials();
+      oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
+          identifier: "escontrol", secret: "escontrol");
+
+      var response = await cl.get(Constants.host + "rest/api/v1/surveys/");
 //    .get("http://10.10.10.100:9300/escontrol/rest/api/v1/surveys/");
 //          .get("http://192.168.1.9:9300/escontrol/rest/api/v1/surveys/");
 //      debugPrint(response.body);
@@ -44,9 +46,11 @@ class RestApi {
               surveyPojo.surveyQuestionAnswerChoices;
           await manageSurveyQuestionAnswerChoices(surveyQuestionAnswerChoices);
 
-          List<SurveyQuestionAnswerChoiceSelection> surveyQuestionAnswerChoiceSelections =
+          List<SurveyQuestionAnswerChoiceSelection>
+              surveyQuestionAnswerChoiceSelections =
               surveyPojo.surveyQuestionAnswerChoiceSelections;
-          await manageSurveyQuestionAnswerChoiceSelections(surveyQuestionAnswerChoiceSelections);
+          await manageSurveyQuestionAnswerChoiceSelections(
+              surveyQuestionAnswerChoiceSelections);
         }
       }
     } catch (e) {
@@ -141,7 +145,28 @@ class RestApi {
     }
   }
 
-  void cleanUpDatabase() async{
+ Future<int> uploadSurveyResponse(String surveyResponseUniqueId) async {
+    SurveyResponse surveyResponse =
+        await DBProvider.db.getSurveyResponseByUniqueId(surveyResponseUniqueId);
+    String username = await FileStorage.readUsername();
+    surveyResponse.username = username;
+    String credentials = await FileStorage.readCredentials();
+    oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
+        identifier: "escontrol", secret: "escontrol");
+    String surveyResponseJson = SurveyResponse.clientToJson(surveyResponse);
+    Response response = await cl.post(
+        Constants.host + "rest/api/v1/surveyResponse/create",
+        body: surveyResponseJson,
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        encoding: Encoding.getByName("utf-8"));
+    debugPrint("response statuscode ${response.statusCode}");
+    return response.statusCode;
+  }
+
+  void cleanUpDatabase() async {
     await DBProvider.db.deleteAll();
   }
 }

@@ -1,5 +1,5 @@
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/repository/survey_repository.dart';
+import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/survey_forms_page.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +21,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
   List<Survey> surveys;
   ProgressHUD _progressHUD;
   bool _loading = true;
+  String _username = "A";
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
     );
     surveys = List<Survey>();
     getSurveys();
+    getUsername();
   }
 
   void dismissProgressHUD() {
@@ -59,46 +61,74 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              margin: EdgeInsets.all(0.0),
+              padding: EdgeInsets.all(0.0),
+              child: UserAccountsDrawerHeader(
+                  margin: EdgeInsets.all(0.0),
+                  decoration: BoxDecoration(color: Constants.primaryColor),
+                  accountName: Text(
+                    _username[0].toUpperCase() + _username.substring(1),
+                    style: TextStyle(fontSize: 20, letterSpacing: 2),
+                  ),
+                  currentAccountPicture: CircleAvatar(
+                    radius: 50.0,
+                    backgroundColor:
+                        Theme.of(context).platform == TargetPlatform.iOS
+                            ? Colors.green
+                            : Colors.white,
+                    child: Text(
+                      _username.substring(0, 1).toUpperCase(),
+                      style: TextStyle(fontSize: 40.0, color: Colors.green),
+                    ),
+                  )),
+              decoration: BoxDecoration(
+                color: Colors.green,
+              ),
+            ),
+            ListTile(
+                contentPadding: EdgeInsets.only(top: 16.0, left: 16.0),
+                leading: Icon(
+                  Icons.sync,
+                  color: Constants.primaryColor,
+                ),
+                title: new Text("Sync",
+                    style: TextStyle(
+                      color: Constants.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    )),
+                onTap: () {
+                  syncQuestionsDialog();
+                }),
+            ListTile(
+                contentPadding: EdgeInsets.only(top: 16.0, left: 16.0),
+                leading: Icon(
+                  Icons.power_settings_new,
+                  color: Colors.red,
+                ),
+                title: new Text("Logout",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    )),
+                onTap: () {
+                  logoutUser();
+                }),
+          ],
+        ),
+      ),
       appBar: new AppBar(
         title: Text("Surveys"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.sync),
             onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext buildContext) {
-                    return AlertDialog(
-                      contentPadding: EdgeInsets.all(0.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0)),
-                      title: Text(
-                        "Are you sure you want to sync the data?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.indigo),
-                      ),
-                      actions: <Widget>[
-                        FlatButton(
-                          child: const Text('Cancel'),
-                          onPressed: () {
-                            Navigator.of(context).pop(ConfirmAction.CANCEL);
-                          },
-                        ),
-                        FlatButton(
-                          child: const Text('Yes'),
-                          onPressed: () {
-                            dismissProgressHUD();
-                            setState(() {
-                              present = 0;
-                              surveys.clear();
-                              _reSync();
-                            });
-                            Navigator.of(context).pop(ConfirmAction.ACCEPT);
-                          },
-                        )
-                      ],
-                    );
-                  });
+              syncQuestionsDialog();
             },
           )
         ],
@@ -146,5 +176,63 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
   _navigateToSurvey(BuildContext context, Survey survey) {
     Navigator.of(context).push(
         new MaterialPageRoute(builder: (context) => new SurveyPage(survey)));
+  }
+
+  void logoutUser() async {
+    await FileStorage.writeCredentials("");
+    await FileStorage.writeUsername("");
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+  }
+
+  void getUsername() async {
+    String username = await FileStorage.readUsername();
+    setState(() {
+      _username = username;
+    });
+  }
+
+  void syncQuestionsDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext buildContext) {
+          return AlertDialog(
+            contentPadding: EdgeInsets.all(0.0),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0)),
+            title: Text(
+              "Are you sure you want to sync the data?",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Constants.primaryColor),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(ConfirmAction.CANCEL);
+                },
+              ),
+              FlatButton(
+                child: const Text(
+                  'Yes',
+                  style: TextStyle(color: Colors.green),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  dismissProgressHUD();
+                  setState(() {
+                    present = 0;
+                    surveys.clear();
+                    _reSync();
+                  });
+                  Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                },
+              )
+            ],
+          );
+        });
   }
 }

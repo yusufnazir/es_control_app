@@ -139,6 +139,13 @@ class DBProvider {
     return res.isNotEmpty ? SurveyResponse.fromDbMap(res.first) : null;
   }
 
+  Future<SurveyResponse> getSurveyResponseByUniqueId(String uniqueId) async {
+    final db = await database;
+    var res = await db.query(SurveyResponse.tableSurveyResponses,
+        where: "${SurveyResponse.columnUniqueId} = ?", whereArgs: [uniqueId]);
+    return res.isNotEmpty ? SurveyResponse.fromDbMap(res.first) : null;
+  }
+
   createSurveyResponse(SurveyResponse surveyResponse) async {
     final db = await database;
     //insert to the table using the new id

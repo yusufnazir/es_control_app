@@ -1,7 +1,9 @@
 import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/form_card.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
+import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/util/question_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:progress_hud_v2/progress_hud.dart';
@@ -118,9 +120,9 @@ class SurveyPageState extends State<SurveyPage> {
     TextEditingController formNameController = TextEditingController();
 
     TextFormField formNameField = TextFormField(
-      style: TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.green),
       decoration: InputDecoration(
-          labelText: "Form name", labelStyle: TextStyle(color: Colors.white)),
+          labelText: "Form name", labelStyle: TextStyle(color: Colors.green)),
       controller: formNameController,
     );
 
@@ -134,6 +136,8 @@ class SurveyPageState extends State<SurveyPage> {
       surveyResponse.surveyId = widget.survey.id;
       surveyResponse.createdOn = DateTime.now();
       surveyResponse.formName = text;
+      String username = await FileStorage.readUsername();
+      surveyResponse.username = username;
       await DBProvider.db.createSurveyResponse(surveyResponse);
       List<SurveyResponse> surveyResponses =
           await DBProvider.db.getAllSurveyResponses(widget.survey.id);
@@ -146,7 +150,7 @@ class SurveyPageState extends State<SurveyPage> {
         context: context,
         builder: (BuildContext buildContext) {
           return AlertDialog(
-              backgroundColor: Constants.primaryColor,
+              backgroundColor: Colors.white,
               contentPadding: EdgeInsets.all(0.0),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0)),
@@ -167,7 +171,7 @@ class SurveyPageState extends State<SurveyPage> {
                 ),
                 FlatButton(
                   child: const Text('Submit',
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
+                      style: TextStyle(color: Colors.green, fontSize: 20)),
                   onPressed: () {
                     createNewForm();
                     Navigator.of(context).pop(ConfirmAction.ACCEPT);
@@ -197,17 +201,11 @@ class SurveyPageState extends State<SurveyPage> {
       BuildContext context, SurveyResponse surveyResponse,Function callback) {
     void uploadForm(Function callback) async{
       await new Future.delayed(const Duration(seconds: 1));
-      callback();
+      int responseCode = await uploadSurveyResponse(surveyResponse.uniqueId);
+      if(responseCode==200){
+        callback();
+      }
       toggleProgressHUD();
-//      SurveyResponse surveyResponse = new SurveyResponse();
-//      Uuid uuid = Uuid();
-//      String uniqueId = uuid.v4();
-//      surveyResponse.uniqueId = uniqueId;
-//      surveyResponse.surveyId = widget.survey.id;
-//      surveyResponse.createdOn = DateTime.now();
-//      await DBProvider.db.createSurveyResponse(surveyResponse);
-//      List<SurveyResponse> surveyResponses =
-//          await DBProvider.db.getAllSurveyResponses(widget.survey.id);
     }
 
     showDialog(
@@ -294,5 +292,9 @@ class SurveyPageState extends State<SurveyPage> {
     }
     _loading = !_loading;
 //    });
+  }
+
+  Future<int> uploadSurveyResponse(String surveyResponseUniqueId) async {
+    return await RestApi().uploadSurveyResponse(surveyResponseUniqueId);
   }
 }
