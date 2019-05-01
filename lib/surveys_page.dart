@@ -103,7 +103,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                       fontWeight: FontWeight.bold,
                     )),
                 onTap: () {
-                  syncQuestionsDialog();
+                  syncQuestionsDialog(callback: () => {Navigator.pop(context)});
                 }),
             ListTile(
                 contentPadding: EdgeInsets.only(top: 16.0, left: 16.0),
@@ -192,7 +192,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
     });
   }
 
-  void syncQuestionsDialog() {
+  void syncQuestionsDialog({Function callback}) {
     showDialog(
         context: context,
         builder: (BuildContext buildContext) {
@@ -221,7 +221,9 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                   style: TextStyle(color: Colors.green),
                 ),
                 onPressed: () {
-                  Navigator.pop(context);
+                  if (callback != null) {
+                    callback();
+                  }
                   dismissProgressHUD();
                   setState(() {
                     present = 0;
