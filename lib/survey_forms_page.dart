@@ -5,6 +5,8 @@ import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/util/question_validator.dart';
+import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:progress_hud_v2/progress_hud.dart';
 import 'package:uuid/uuid.dart';
@@ -12,6 +14,36 @@ import 'package:uuid/uuid.dart';
 import 'model/survey_model.dart';
 import 'repository/db_provider.dart';
 import 'survey_form_questions_page.dart';
+
+//class OnScrollCallback<T extends Widget> extends ItemListCallback {
+//  int availableItems = 0;
+//
+//  @override
+//  Future<EventModel> getItemList() async{
+//      List<T> itemList = List();
+//      if (availableItems < totalItems) {
+//        for (int i = availableItems; i < availableItems + threshold; i++) {
+//          Widget widget;
+//          if (i % 5 == 0) {
+//            widget = TitleWidget(i);
+//          } else {
+//            widget = ListItemWidget(ItemModel("Title $i", "Subtitle $i"));
+//          }
+//          itemList.add(widget);
+//        }
+//        availableItems += threshold;
+//        return EventModel(progress: false, data: itemList, error: null);
+//      } else {
+//        for (int i = availableItems; i < availableItems + 3; i++) {
+//          Widget widget = ListItemWidget(ItemModel("Title $i", "Subtitle $i"));
+//          itemList.add(widget);
+//        }
+//        availableItems += 3;
+//        return EventModel(
+//            progress: false, data: itemList, error: null, stopLoading: true);
+//      }
+//  }
+//}
 
 class SurveyPage extends StatefulWidget {
   final Survey survey;
@@ -34,6 +66,8 @@ class SurveyPageState extends State<SurveyPage> {
 
   @override
   void initState() {
+    super.initState();
+    debugPrint("running init state");
     _progressHUD = new ProgressHUD(
       loading: _loading,
       backgroundColor: Colors.black12,
@@ -43,76 +77,107 @@ class SurveyPageState extends State<SurveyPage> {
       text: 'Uploading...',
     );
     surveyResponses = List<SurveyResponse>();
-    getSurveyResponses();
-    super.initState();
+//    getSurveyResponses();
   }
 
   @override
   Widget build(BuildContext context) {
-    var surveyCard = Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            title:
-                Text("You have ${surveyResponses.length} forms at the moment."),
-          )
-        ],
-      ),
-    );
+    debugPrint("running build");
+//    var surveyCard = Card(
+//      child: Column(
+//        mainAxisSize: MainAxisSize.min,
+//        children: <Widget>[
+//          ListTile(
+//            title:
+//                Text("You have ${surveyResponses.length} forms at the moment."),
+//          )
+//        ],
+//      ),
+//    );
 
-    return new Scaffold(
-        appBar: AppBar(
-          bottom: PreferredSize(
-              child: Text(widget.survey.description,
-                  style: TextStyle(
-                      fontStyle: FontStyle.italic, color: Colors.white)),
-              preferredSize: null),
-          title: Text(
-            widget.survey.name,
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            createNewFormLayout(context);
-          },
-          child: Icon(Icons.add),
-        ),
-        body: Stack(
-          children: <Widget>[
-            Column(children: <Widget>[
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: surveyCard,
+    return FutureBuilder(
+      future: getSurveyResponses(),
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.hasData) {
+          return new Scaffold(
+              appBar: AppBar(
+                bottom: PreferredSize(
+                    child: Text(widget.survey.description,
+                        style: TextStyle(
+                            fontStyle: FontStyle.italic, color: Colors.white)),
+                    preferredSize: null),
+                title: Text(
+                  widget.survey.name,
+                ),
               ),
-              Expanded(
-                  child: ListView.builder(
-                      itemCount: surveyResponses.length,
-                      itemBuilder: (context, position) {
-                        return Card(
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  createNewFormLayout(context);
+                },
+                child: Icon(Icons.add),
+              ),
+              body: Stack(
+                children: <Widget>[
+                  Column(children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Card(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            ListTile(
+                              title:
+                              Text("You have ${surveyResponses.length} forms at the moment."),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                        child:
+//                  PaginatedListWidget(
+//                      progressWidget: Center(
+//                        child: Text("Loading..."),
+//                      ),
+//                      itemListCallback: OnScrollCallback()),
+                            ListView.builder(
+                                itemCount: surveyResponses.length,
+                                itemBuilder: (context, position) {
+                                  return Card(
 //                        color: Color.fromRGBO(58, 66, 86, 1.0),
-                            color: Constants.primaryColorLight,
-                            child: Column(children: <Widget>[
-                              Divider(height: 5.0),
-                              createFormListTile(
-                                  surveyResponses[position], position)
-                            ]));
-                      }))
-            ]),
-            _progressHUD
-          ],
-        ));
+                                      color: Constants.primaryColorLight,
+                                      child: Column(children: <Widget>[
+                                        Divider(height: 5.0),
+                                        createFormListTile(
+                                            surveyResponses[position], position)
+                                      ]));
+                                }))
+                  ]),
+                  _progressHUD
+                ],
+              ));
+        } else {
+          return SizedCircularProgressBar(
+            height: 25,
+            width: 25,
+          );
+        }
+      },
+    );
   }
 
   createFormListTile(SurveyResponse surveyResponse, int position) {
+    debugPrint("creating card $surveyResponse");
     return FormCardTile(
-      prepareForUpload: (Function callback) async{
-        await surveyFormSelectedForValidation(context, surveyResponses[position],callback);
+      prepareForUpload: (Function callback) async {
+        await surveyFormSelectedForValidation(
+            context, surveyResponse, callback);
       },
       surveyFormSelected: () {
-        surveyFormSelected(context, surveyResponses[position]);
+        surveyFormSelected(context, surveyResponse);
       },
       surveyResponse: surveyResponse,
+      key: Key(surveyResponse.uniqueId) ,
     );
   }
 
@@ -136,13 +201,16 @@ class SurveyPageState extends State<SurveyPage> {
       surveyResponse.surveyId = widget.survey.id;
       surveyResponse.createdOn = DateTime.now();
       surveyResponse.formName = text;
+      surveyResponse.uploaded = false;
       String username = await FileStorage.readUsername();
       surveyResponse.username = username;
+      surveyResponse.active = true;
       await DBProvider.db.createSurveyResponse(surveyResponse);
       List<SurveyResponse> surveyResponses =
           await DBProvider.db.getAllSurveyResponses(widget.survey.id);
+      this.surveyResponses.clear();
       setState(() {
-        this.surveyResponses.add(surveyResponse);
+        this.surveyResponses.addAll(surveyResponses);
       });
     }
 
@@ -198,12 +266,32 @@ class SurveyPageState extends State<SurveyPage> {
   }
 
   void createUploadFormConfirmationLayout(
-      BuildContext context, SurveyResponse surveyResponse,Function callback) {
-    void uploadForm(Function callback) async{
-      await new Future.delayed(const Duration(seconds: 1));
+      BuildContext context, SurveyResponse surveyResponse, Function callback) {
+    void uploadForm(Function callback) async {
+//      await new Future.delayed(const Duration(seconds: 1));
       int responseCode = await uploadSurveyResponse(surveyResponse.uniqueId);
-      if(responseCode==200){
+      if (responseCode == 200) {
+        await DBProvider.db
+            .updateSurveyResponseUploaded(surveyResponse.uniqueId, true);
         callback();
+      } else {
+        Flushbar(
+          duration: Duration(seconds: 8),
+          flushbarPosition: FlushbarPosition.TOP,
+          flushbarStyle: FlushbarStyle.FLOATING,
+          isDismissible: true,
+          dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+          title: "Upload failure.",
+          message: "There was an error uploading the data.",
+          backgroundGradient: LinearGradient(
+            colors: [Colors.red[400], Colors.red[600]],
+          ),
+          boxShadow: BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          ),
+        )..show(context);
       }
       toggleProgressHUD();
     }
@@ -250,12 +338,14 @@ class SurveyPageState extends State<SurveyPage> {
         });
   }
 
-  void getSurveyResponses() async {
+  getSurveyResponses() async {
     List<SurveyResponse> surveyResponses =
         await DBProvider.db.getAllSurveyResponses(widget.survey.id);
-    setState(() {
-      this.surveyResponses.addAll(surveyResponses);
-    });
+//    setState(() {
+    this.surveyResponses.clear();
+    this.surveyResponses.addAll(surveyResponses);
+//    });
+    return surveyResponses;
   }
 
   surveyFormSelected(BuildContext context, SurveyResponse surveyResponse) {
@@ -266,8 +356,8 @@ class SurveyPageState extends State<SurveyPage> {
             )));
   }
 
-  surveyFormSelectedForValidation(
-      BuildContext context, SurveyResponse surveyResponse,Function callback) async {
+  surveyFormSelectedForValidation(BuildContext context,
+      SurveyResponse surveyResponse, Function callback) async {
     QuestionValidator questionValidator =
         QuestionValidator(widget.survey.id, surveyResponse.uniqueId);
     await questionValidator.validateQuestions();

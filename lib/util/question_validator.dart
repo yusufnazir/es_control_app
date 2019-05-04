@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 class QuestionValidator {
   List<int> questionsToSkip = List<int>();
-  Map<int, int> _requiredQuestionsGroupMap = Map<int, int>();
+  Map<int, int> _requiredQuestionsSectionMap = Map<int, int>();
   final String surveyResponseUniqueId;
   SurveyQuestion _surveyQuestion;
   final int surveyId;
@@ -50,8 +50,8 @@ class QuestionValidator {
         surveyResponseAnswer.responseText == null ||
         surveyResponseAnswer.responseText.trim().isEmpty) {
       this._surveyQuestion = surveyQuestion;
-      this._requiredQuestionsGroupMap[surveyQuestion.id] =
-          surveyQuestion.groupId;
+      this._requiredQuestionsSectionMap[surveyQuestion.id] =
+          surveyQuestion.sectionId;
       return;
     }
   }
@@ -66,8 +66,8 @@ class QuestionValidator {
 //      debugPrint("surveyResponseAnswers ${surveyResponseAnswers.length}");
       if (surveyResponseAnswers == null || surveyResponseAnswers.length == 0) {
         this._surveyQuestion = surveyQuestion;
-        this._requiredQuestionsGroupMap[surveyQuestion.id] =
-            surveyQuestion.groupId;
+        this._requiredQuestionsSectionMap[surveyQuestion.id] =
+            surveyQuestion.sectionId;
         return;
       } else {
         SurveyResponseAnswer surveyResponseAnswer = surveyResponseAnswers[0];
@@ -80,8 +80,8 @@ class QuestionValidator {
                 (surveyResponseAnswer.otherValue == null ||
                     surveyResponseAnswer.otherValue.trim().isEmpty))) {
           this._surveyQuestion = surveyQuestion;
-          this._requiredQuestionsGroupMap[surveyQuestion.id] =
-              surveyQuestion.groupId;
+          this._requiredQuestionsSectionMap[surveyQuestion.id] =
+              surveyQuestion.sectionId;
           return;
         }
       }
@@ -94,10 +94,10 @@ class QuestionValidator {
     _surveyQuestion = value;
   }
 
-  Map<int, int> get requiredQuestionsGroupMap => _requiredQuestionsGroupMap;
+  Map<int, int> get requiredQuestionsSectionMap => _requiredQuestionsSectionMap;
 
-  set requiredQuestionsGroupMap(Map<int, int> value) {
-    _requiredQuestionsGroupMap = value;
+  set requiredQuestionsSectionMap(Map<int, int> value) {
+    _requiredQuestionsSectionMap = value;
   }
 
   validateMatrix(SurveyQuestion surveyQuestion) {}

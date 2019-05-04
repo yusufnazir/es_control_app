@@ -1,4 +1,5 @@
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
@@ -12,7 +13,7 @@ class Utilities {
     if (dateTime == null) {
       return null;
     }
-    return DateFormat('yyyy-MM-dd – kk:mm').parse(dateTime);
+    return DateFormat(Constants.dateFormat).parse(dateTime);
   }
 
   static int getSurveyIdFromJson(Map<String, dynamic> json) {
@@ -23,12 +24,12 @@ class Utilities {
     return survey.id;
   }
 
-  static int getGroupIdFromJson(Map<String, dynamic> json) {
-    SurveyGroup surveyGroup = SurveyGroup.fromJsonMap(json);
-    if (surveyGroup == null) {
+  static int getSectionIdFromJson(Map<String, dynamic> json) {
+    SurveySection surveySection = SurveySection.fromJsonMap(json);
+    if (surveySection == null) {
       return null;
     }
-    return surveyGroup.id;
+    return surveySection.id;
   }
 
   static int getSurveyQuestionIdFromJson(Map<String, dynamic> json) {

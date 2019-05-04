@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:es_control_app/util/utilities.dart';
 
-class SurveyGroup {
-  static final String tableSurveyGroups = "SurveyGroups";
+class SurveySection {
+  static final String tableSurveySections = "SurveySections";
   static final String columnId = "id";
   static final String columnName = "name";
   static final String columnDescription = "description";
@@ -18,7 +18,7 @@ class SurveyGroup {
   bool active;
   bool enableApplicability;
 
-  SurveyGroup(
+  SurveySection(
       {this.id,
       this.name,
       this.description,
@@ -26,17 +26,17 @@ class SurveyGroup {
       this.active,
       this.enableApplicability});
 
-  SurveyGroup clientFromJson(String str) {
+  SurveySection clientFromJson(String str) {
     final jsonData = json.decode(str);
-    return SurveyGroup.fromJsonMap(jsonData);
+    return SurveySection.fromJsonMap(jsonData);
   }
 
-  String clientToJson(SurveyGroup data) {
+  String clientToJson(SurveySection data) {
     final dyn = data.toDbMap();
     return json.encode(dyn);
   }
 
-  factory SurveyGroup.fromJsonMap(Map<String, dynamic> json) => new SurveyGroup(
+  factory SurveySection.fromJsonMap(Map<String, dynamic> json) => new SurveySection(
         id: json["id"],
         name: json["name"],
         description: json["description"],
@@ -45,7 +45,7 @@ class SurveyGroup {
         enableApplicability: json["enableApplicability"] == true,
       );
 
-  factory SurveyGroup.fromDbMap(Map<String, dynamic> json) => new SurveyGroup(
+  factory SurveySection.fromDbMap(Map<String, dynamic> json) => new SurveySection(
         id: json[columnId],
         name: json[columnName],
         description: json[columnDescription],
@@ -66,7 +66,7 @@ class SurveyGroup {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SurveyGroup &&
+      other is SurveySection &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&
@@ -86,6 +86,6 @@ class SurveyGroup {
 
   @override
   String toString() {
-    return 'SurveyGroup{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active, enableApplicability: $enableApplicability}';
+    return 'SurveySection{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active, enableApplicability: $enableApplicability}';
   }
 }

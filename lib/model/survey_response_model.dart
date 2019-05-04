@@ -63,7 +63,7 @@ class SurveyResponse {
         uniqueId: json[columnUniqueId],
         surveyId: json[columnSurveyId],
         formName: json[columnFormName],
-        createdOn: Utilities.getDateTimeFromJson(json[columnCreatedOn]),
+        createdOn: DateTime.fromMicrosecondsSinceEpoch(json[columnCreatedOn]),
         active: json[columnActive] == 1,
         uploaded: json[columnUploaded] == 1,
         username: json[columnUsername],
@@ -74,7 +74,7 @@ class SurveyResponse {
         columnUniqueId: uniqueId,
         columnSurveyId: surveyId,
         columnFormName: formName,
-        columnCreatedOn: DateFormat(Constants.dateFormat).format(createdOn),
+        columnCreatedOn: createdOn.microsecondsSinceEpoch,
         columnActive: active,
         columnUploaded: active,
         columnUsername: username,
@@ -86,14 +86,16 @@ class SurveyResponse {
     map["uniqueId"] = uniqueId;
     map["surveyId"] = surveyId;
     map["formName"] = formName;
-    map["createdOn"] = DateFormat(Constants.dateFormat).format(createdOn);
+    map["createdOn"] = DateFormat(Constants.dateFormatPrecise).format(createdOn);
     map["active"] = active;
     map["username"] = username;
+    map["uploaded"] = uploaded;
     return map;
   }
 
   @override
   String toString() {
-    return 'SurveyResponse{id: $id, uniqueId: $uniqueId, surveyId: $surveyId, formName: $formName, createdOn: $createdOn, active: $active}';
+    return 'SurveyResponse{id: $id, uniqueId: $uniqueId, surveyId: $surveyId, formName: $formName, username: $username, createdOn: $createdOn, active: $active, uploaded: $uploaded}';
   }
+
 }

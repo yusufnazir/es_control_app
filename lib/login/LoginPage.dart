@@ -1,11 +1,11 @@
 import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/routes.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:oauth2/oauth2.dart';
 import 'package:progress_hud_v2/progress_hud.dart';
-
 import 'FormType.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,9 +16,9 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
 
-  final TextEditingController _emailFilter = new TextEditingController();
+  final TextEditingController _usernameFilter = new TextEditingController();
   final TextEditingController _passwordFilter = new TextEditingController();
-  String _email = "";
+  String _username = "";
   String _password = "";
   FormType _form = FormType
       .login; // our default setting is to login, and we should switch to creating an account when the user chooses to
@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   double _width = double.maxFinite;
 
   _LoginPageState() {
-    _emailFilter.addListener(_emailListen);
+    _usernameFilter.addListener(_emailListen);
     _passwordFilter.addListener(_passwordListen);
   }
 
@@ -54,10 +54,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   void _emailListen() {
-    if (_emailFilter.text.isEmpty) {
-      _email = "";
+    if (_usernameFilter.text.isEmpty) {
+      _username = "";
     } else {
-      _email = _emailFilter.text;
+      _username = _usernameFilter.text;
     }
   }
 
@@ -83,12 +83,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final emailField = TextField(
-      controller: _emailFilter,
+      controller: _usernameFilter,
       obscureText: false,
       style: style,
       decoration: InputDecoration(
           contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          hintText: "Email",
+          hintText: "Username",
           border:
               OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
     );
@@ -164,7 +164,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   void _loginPressed() {
-    print('The user wants to login with $_email and $_password');
 //    getQuote();
     getSurveysFromServer();
 //    _launchURL();
@@ -177,7 +176,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   getSurveysFromServer() async {
     // This URL is an endpoint that's provided by the authorization server. It's
 // usually included in the server's documentation of its OAuth2 API.
-    final authorizationEndpoint = Uri.parse(Constants.host + "oauth/token");
+    final authorizationEndpoint = Uri.parse(Constants.tokenUri);
 
 // The user should supply their own username and password.
 //    final username = "example user";
@@ -190,22 +189,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 //
 // Some servers don't require the client to authenticate itself, in which case
 // these should be omitted.
-    final identifier = "escontrol";
-    final secret = "escontrol";
 
 // Make a request to the authorization endpoint that will produce the fully
 // authenticated Client.
     try {
-      debugPrint("_email $_email");
-      debugPrint("_password $_password");
       var client = await oauth2.resourceOwnerPasswordGrant(
-          authorizationEndpoint, _email, _password,
-          identifier: identifier, secret: secret);
-      debugPrint("Client $client");
+          authorizationEndpoint, _username, _password,
+          identifier: Constants.client, secret: Constants.clientSecret);
       FileStorage.writeCredentials(client.credentials.toJson());
-      FileStorage.writeUsername(_email);
+      FileStorage.writeUsername(_username);
       Navigator.of(context)
-          .pushNamedAndRemoveUntil('/surveys', (Route<dynamic> route) => false);
+          .pushNamedAndRemoveUntil(Routes.surveys, (Route<dynamic> route) => false);
     } catch (e) {
       print(e.toString());
       setState(() {
@@ -266,7 +260,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   setUpButtonChild() {
     if (_state == 0) {
       return Text(
-        "Click Here",
+        "Sign in",
         style: const TextStyle(
           color: Colors.white,
           fontSize: 16,

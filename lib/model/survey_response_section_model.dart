@@ -2,59 +2,59 @@ import 'dart:convert';
 
 import 'package:es_control_app/util/utilities.dart';
 
-class SurveyResponseGroup {
-  static final String tableSurveyResponseGroups = "SurveyResponseGroups";
+class SurveyResponseSection {
+  static final String tableSurveyResponseSections = "SurveyResponseSections";
 
   static final String columnId = "id";
   static final String columnUniqueId = "unique_id";
   static final String columnActive = "active";
   static final String columnSurveyResponseUniqueId =
       "survey_response_unique_id";
-  static final String columnSurveyGroupId = "survey_group_id";
+  static final String columnSurveySectionId = "survey_section_id";
   static final String columnApplicable = "applicable";
 
   int id;
   String uniqueId;
   bool active;
   String surveyResponseUniqueId;
-  int surveyGroupId;
+  int surveySectionId;
   bool applicable;
 
-  SurveyResponseGroup({
+  SurveyResponseSection({
     this.id,
     this.uniqueId,
     this.active,
     this.surveyResponseUniqueId,
-    this.surveyGroupId,
+    this.surveySectionId,
     this.applicable,
   });
 
-  SurveyResponseGroup clientFromJson(String str) {
+  SurveyResponseSection clientFromJson(String str) {
     final jsonData = json.decode(str);
-    return SurveyResponseGroup.fromJsonMap(jsonData);
+    return SurveyResponseSection.fromJsonMap(jsonData);
   }
 
-  String clientToJson(SurveyResponseGroup data) {
+  String clientToJson(SurveyResponseSection data) {
     final dyn = data.toDbMap();
     return json.encode(dyn);
   }
 
-  factory SurveyResponseGroup.fromJsonMap(Map<String, dynamic> json) =>
-      new SurveyResponseGroup(
+  factory SurveyResponseSection.fromJsonMap(Map<String, dynamic> json) =>
+      new SurveyResponseSection(
           id: json["id"],
           uniqueId: json["uniqueId"],
           active: json["active"] == true,
           surveyResponseUniqueId: Utilities.getSurveyResponseUniqueIdFromJson(
               json["surveyResponseUniqueId"]),
-          surveyGroupId: Utilities.getGroupIdFromJson(json["surveyGroupId"]),
+          surveySectionId: Utilities.getSectionIdFromJson(json["surveySectionId"]),
           applicable: json["applicable"] == true);
 
-  factory SurveyResponseGroup.fromDbMap(Map<String, dynamic> json) =>
-      new SurveyResponseGroup(
+  factory SurveyResponseSection.fromDbMap(Map<String, dynamic> json) =>
+      new SurveyResponseSection(
         id: json[columnId],
         uniqueId: json[columnUniqueId],
         surveyResponseUniqueId: json[columnSurveyResponseUniqueId],
-        surveyGroupId: json[columnSurveyGroupId],
+        surveySectionId: json[columnSurveySectionId],
         active: json[columnActive] == 1,
         applicable: json[columnApplicable] == 1,
       );
@@ -63,7 +63,7 @@ class SurveyResponseGroup {
         columnId: id,
         columnUniqueId: uniqueId,
         columnSurveyResponseUniqueId: surveyResponseUniqueId,
-        columnSurveyGroupId: surveyGroupId,
+        columnSurveySectionId: surveySectionId,
         columnActive: active,
         columnApplicable: applicable
       };
@@ -71,13 +71,13 @@ class SurveyResponseGroup {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SurveyResponseGroup &&
+      other is SurveyResponseSection &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           uniqueId == other.uniqueId &&
           active == other.active &&
           surveyResponseUniqueId == other.surveyResponseUniqueId &&
-          surveyGroupId == other.surveyGroupId &&
+          surveySectionId == other.surveySectionId &&
           applicable == other.applicable;
 
   @override
@@ -86,11 +86,11 @@ class SurveyResponseGroup {
       uniqueId.hashCode ^
       active.hashCode ^
       surveyResponseUniqueId.hashCode ^
-      surveyGroupId.hashCode ^
+      surveySectionId.hashCode ^
       applicable.hashCode;
 
   @override
   String toString() {
-    return 'SurveyResponseGroup{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveyGroupId: $surveyGroupId, applicable: $applicable}';
+    return 'SurveyResponseSection{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveySectionId: $surveySectionId, applicable: $applicable}';
   }
 }

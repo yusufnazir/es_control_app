@@ -20,5 +20,14 @@ class Constants{
   static Color accent = const Color(0xFF32C4E6);
 
   static String host = "http://192.168.0.105:9300/escontrol/";
-  static String dateFormat = "yyyy-MM-dd – kk:mm";
+  static String tokenUri = host + "oauth/token";
+
+  static String getAllSurveys = host + "rest/api/v1/surveys/";
+  static String getAllSurveyResponses = host + "rest/api/v1/surveyResponses/";
+
+  static String dateFormat = "yyyy-MM-dd HH:mm";
+  static String dateFormatPrecise = "yyyy-MM-dd HH:mm:ss";
+
+  static String client = "escontrol";
+  static String clientSecret = "escontrol";
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
-import 'package:es_control_app/model/survey_response_group_model.dart';
+import 'package:es_control_app/model/survey_response_section_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
 import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
@@ -13,11 +13,11 @@ import 'package:flutter/material.dart';
 class QuestionGeneratorWidget extends StatefulWidget {
   final List<SurveyQuestion> surveyQuestions;
   final SurveyResponse surveyResponse;
-  final SurveyGroup surveyGroup;
+  final SurveySection surveySection;
   final int requiredQuestionId;
 
-  QuestionGeneratorWidget(
-      this.surveyResponse, this.surveyQuestions, this.surveyGroup, this.requiredQuestionId);
+  QuestionGeneratorWidget(this.surveyResponse, this.surveyQuestions,
+      this.surveySection, this.requiredQuestionId);
 
   @override
   State<StatefulWidget> createState() {
@@ -26,7 +26,8 @@ class QuestionGeneratorWidget extends StatefulWidget {
 }
 
 class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
-  bool groupSelected;
+  bool sectionSelected;
+  bool uploaded;
 
   StreamController<StreamControllerBeanChoice> streamController =
       new StreamController.broadcast();
@@ -34,8 +35,10 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   @override
   void initState() {
     super.initState();
-    groupSelected =false;
-    getSurveyGroupApplicability();
+    uploaded = false;
+    sectionSelected = false;
+    getSurveySectionApplicability();
+    getSurveyResponseUploaded();
   }
 
   @override
@@ -44,16 +47,15 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     super.dispose();
   }
 
-  getSurveyGroupApplicability() async {
-
-    SurveyResponseGroup surveyResponseGroup = await DBProvider.db
-        .getSurveyResponseGroupByResponseAndGroup(
-        widget.surveyResponse.uniqueId, widget.surveyGroup.id);
-    if (surveyResponseGroup != null) {
+  getSurveySectionApplicability() async {
+    SurveyResponseSection surveyResponseSection = await DBProvider.db
+        .getSurveyResponseSectionByResponseAndSection(
+            widget.surveyResponse.uniqueId, widget.surveySection.id);
+    if (surveyResponseSection != null) {
       if (this.mounted) {
         setState(() {
-//          debugPrint("getSurveyGroupApplicability");
-          groupSelected = surveyResponseGroup.applicable;
+//          debugPrint("getSurveySectionApplicability");
+          sectionSelected = surveyResponseSection.applicable;
         });
       }
     }
@@ -62,30 +64,33 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      body: ListView(
-        shrinkWrap: true,
-        children: <Widget>[
-          _showGroupNameLayout(),
-          AbsorbPointer(
-            absorbing: groupSelected,
-            child: Column(
-              children: widget.surveyQuestions
-                  .map((item) => new QuestionWidget(
-                      widget.surveyResponse, item, streamController, widget.requiredQuestionId))
-                  .toList(),
+      body: AbsorbPointer(
+        child: ListView(
+          shrinkWrap: true,
+          children: <Widget>[
+            _showSectionNameLayout(),
+            AbsorbPointer(
+              absorbing: sectionSelected,
+              child: Column(
+                children: widget.surveyQuestions
+                    .map((item) => new QuestionWidget(widget.surveyResponse,
+                        item, streamController, widget.requiredQuestionId))
+                    .toList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        absorbing: uploaded,
       ), //      body: SizedBox(
     );
   }
 
-  Card _showGroupNameLayout() {
-    bool enableApplicability = widget.surveyGroup.enableApplicability;
+  Card _showSectionNameLayout() {
+    bool enableApplicability = widget.surveySection.enableApplicability;
     if (enableApplicability == null) {
       enableApplicability = false;
     }
-//    debugPrint("surveyGroup ${widget.surveyGroup}");
+//    debugPrint("surveySection ${widget.surveySection}");
     return Card(
         shape: BeveledRectangleBorder(),
         color: Theme.of(context).primaryColorLight,
@@ -101,7 +106,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
                     padding: EdgeInsets.only(
                         right: 8.0, left: 8.0, bottom: 16.0, top: 16.0),
                     child: Text(
-                      widget.surveyGroup.name,
+                      widget.surveySection.name,
                       textAlign: TextAlign.left,
                       style: TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.white),
@@ -118,9 +123,9 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
                         Checkbox(
                           activeColor: Colors.white,
                           checkColor: Constants.accentColor,
-                          value: groupSelected,
+                          value: sectionSelected,
                           onChanged: (bool value) {
-                            _onGroupHeaderSelected(value);
+                            _onSectionHeaderSelected(value);
                           },
                         ),
                         Text(
@@ -135,16 +140,24 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
           ),
         )
 //        ListTile(
-//          title: Text(widget.surveyGroup.name),
+//          title: Text(widget.surveySection.name),
 //        )
         );
   }
 
-  _onGroupHeaderSelected(bool value) async {
-    await DBProvider.db.updateSurveyResponseGroup(
-        widget.surveyResponse.uniqueId, widget.surveyGroup.id, value);
+  _onSectionHeaderSelected(bool value) async {
+    await DBProvider.db.updateSurveyResponseSection(
+        widget.surveyResponse.uniqueId, widget.surveySection.id, value);
     setState(() {
-      groupSelected = value;
+      sectionSelected = value;
+    });
+  }
+
+  void getSurveyResponseUploaded() async {
+    SurveyResponse surveyResponse = await DBProvider.db
+        .getSurveyResponseByUniqueId(widget.surveyResponse.uniqueId);
+    setState(() {
+      uploaded = surveyResponse.uploaded;
     });
   }
 }

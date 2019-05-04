@@ -17,7 +17,7 @@ class SurveyQuestion {
   bool required;
   String requiredError;
   bool multipleSelection;
-  int groupId;
+  int sectionId;
 
   SurveyQuestion(
       {this.id,
@@ -30,7 +30,7 @@ class SurveyQuestion {
       this.required,
       this.requiredError,
       this.multipleSelection,
-      this.groupId});
+      this.sectionId});
 
   SurveyQuestion clientFromJson(String str) {
     final jsonData = json.decode(str);
@@ -54,7 +54,7 @@ class SurveyQuestion {
         required: json["required"] == true,
         requiredError: json["requiredError"],
         multipleSelection: json["multipleSelection"] == true,
-        groupId: Utilities.getSurveyIdFromJson(json["surveyGroup"]),
+        sectionId: Utilities.getSurveyIdFromJson(json["surveySection"]),
       );
 
   factory SurveyQuestion.fromDbMap(Map<String, dynamic> json) =>
@@ -69,7 +69,7 @@ class SurveyQuestion {
         required: json["required"] == 1,
         requiredError: json["required_error"],
         multipleSelection: json["multiple_selection"] == 1,
-        groupId: json["group_id"],
+        sectionId: json["section_id"],
       );
 
   Map<String, dynamic> toDbMap() => {
@@ -83,7 +83,7 @@ class SurveyQuestion {
         "required": required,
         "required_error": requiredError,
         "multiple_selection": multipleSelection,
-        "group_id": groupId,
+        "section_id": sectionId,
       };
 
   @override
@@ -101,7 +101,7 @@ class SurveyQuestion {
           required == other.required &&
           requiredError == other.requiredError &&
           multipleSelection == other.multipleSelection &&
-          groupId == other.groupId;
+          sectionId == other.sectionId;
 
   @override
   int get hashCode =>
@@ -115,10 +115,10 @@ class SurveyQuestion {
       required.hashCode ^
       requiredError.hashCode ^
       multipleSelection.hashCode ^
-      groupId.hashCode;
+      sectionId.hashCode;
 
   @override
   String toString() {
-    return 'SurveyQuestion{id: $id, active: $active, surveyId: $surveyId, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection, groupId: $groupId}';
+    return 'SurveyQuestion{id: $id, active: $active, surveyId: $surveyId, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection, sectionId: $sectionId}';
   }
 }

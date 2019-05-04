@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
@@ -18,7 +18,7 @@ String clientToJson(SurveyPojo data) {
 
 class SurveyPojo {
   Survey survey;
-  List<SurveyGroup> surveyGroups;
+  List<SurveySection> surveySections;
   List<SurveyQuestion> surveyQuestions;
   List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices;
   List<SurveyQuestionAnswerChoiceSelection>
@@ -26,7 +26,7 @@ class SurveyPojo {
 
   SurveyPojo({
     this.survey,
-    this.surveyGroups,
+    this.surveySections,
     this.surveyQuestions,
     this.surveyQuestionAnswerChoices,
     this.surveyQuestionAnswerChoiceSelections,
@@ -34,8 +34,8 @@ class SurveyPojo {
 
   factory SurveyPojo.fromMap(Map<String, dynamic> json) => new SurveyPojo(
         survey: Survey.fromJsonMap(json["survey"]),
-        surveyGroups: json["surveyGroups"]
-            .map<SurveyGroup>((value) => SurveyGroup.fromJsonMap(value)).toList(),
+        surveySections: json["surveySections"]
+            .map<SurveySection>((value) => SurveySection.fromJsonMap(value)).toList(),
         surveyQuestions: json["surveyQuestions"]
             .map<SurveyQuestion>((value) => SurveyQuestion.fromJsonMap(value))
             .toList(),
@@ -50,7 +50,7 @@ class SurveyPojo {
 
   Map<String, dynamic> toMap() => {
         "survey": survey,
-        "surveyGroups": surveyGroups,
+        "surveySections": surveySections,
         "surveyQuestions": surveyQuestions,
         "surveyQuestionAnswerChoices": surveyQuestionAnswerChoices,
         "surveyQuestionAnswerChoiceSelections":

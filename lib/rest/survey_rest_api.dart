@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/file_storage.dart';
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
@@ -25,7 +26,7 @@ class RestApi {
       oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
           identifier: "escontrol", secret: "escontrol");
 
-      var response = await cl.get(Constants.host + "rest/api/v1/surveys/");
+      var response = await cl.get(Constants.getAllSurveys);
 //    .get("http://10.10.10.100:9300/escontrol/rest/api/v1/surveys/");
 //          .get("http://192.168.1.9:9300/escontrol/rest/api/v1/surveys/");
 //      debugPrint(response.body);
@@ -35,9 +36,9 @@ class RestApi {
           Survey survey = surveyPojo.survey;
           await manageSurvey(survey);
 
-          List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
-//          debugPrint("surveyGroups $surveyGroups");
-          await manageSurveyGroups(surveyGroups);
+          List<SurveySection> surveySections = surveyPojo.surveySections;
+//          debugPrint("surveySections $surveySections");
+          await manageSurveySections(surveySections);
 
           List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;
           await manageSurveyQuestions(surveyQuestions);
@@ -52,6 +53,10 @@ class RestApi {
           await manageSurveyQuestionAnswerChoiceSelections(
               surveyQuestionAnswerChoiceSelections);
         }
+
+        var response = await cl.get(Constants.getAllSurveyResponses);
+        List<SurveyResponse> surveyResponses = parseSurveyResponses(response.body);
+        manageSurveyResponses(surveyResponses);
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -60,12 +65,30 @@ class RestApi {
 
   List<SurveyPojo> parseSurveys(String responseBody) {
     var decode = json.decode(responseBody);
-//    Survey survey = decode["survey"];
-//    final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
-//    var json = json["surveyGroups"];
     return decode
         .map<SurveyPojo>((value) => SurveyPojo.fromMap(value))
         .toList();
+  }
+
+  List<SurveyResponse> parseSurveyResponses(String responseBody) {
+    var decode = json.decode(responseBody);
+    return decode
+        .map<SurveyResponse>((value) => SurveyResponse.fromJsonMap(value))
+        .toList();
+  }
+
+  manageSurveyResponses(List<SurveyResponse> surveyResponses) async {
+    if (surveyResponses != null) {
+      for (SurveyResponse surveyResponse in surveyResponses) {
+        SurveyResponse existingSurveyResponse =
+        await DBProvider.db.getSurveyResponseByUniqueId(surveyResponse.uniqueId);
+        if (existingSurveyResponse == null) {
+          await DBProvider.db.createSurveyResponse(surveyResponse);
+        } else {
+          await DBProvider.db.updateSurveyResponse(surveyResponse);
+        }
+      }
+    }
   }
 
   manageSurvey(Survey survey) async {
@@ -77,15 +100,15 @@ class RestApi {
     }
   }
 
-  manageSurveyGroups(List<SurveyGroup> surveyGroups) async {
-    if (surveyGroups != null) {
-      for (SurveyGroup surveyGroup in surveyGroups) {
-        SurveyGroup existingSurveyGroup =
-            await DBProvider.db.getSurveyGroup(surveyGroup.id);
-        if (existingSurveyGroup == null) {
-          await DBProvider.db.createSurveyGroup(surveyGroup);
+  manageSurveySections(List<SurveySection> surveySections) async {
+    if (surveySections != null) {
+      for (SurveySection surveySection in surveySections) {
+        SurveySection existingSurveySection =
+            await DBProvider.db.getSurveySection(surveySection.id);
+        if (existingSurveySection == null) {
+          await DBProvider.db.createSurveySection(surveySection);
         } else {
-          await DBProvider.db.updateSurveyGroup(surveyGroup);
+          await DBProvider.db.updateSurveySection(surveySection);
         }
       }
     }
@@ -154,16 +177,20 @@ class RestApi {
     oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
         identifier: "escontrol", secret: "escontrol");
     String surveyResponseJson = SurveyResponse.clientToJson(surveyResponse);
-    Response response = await cl.post(
-        Constants.host + "rest/api/v1/surveyResponse/create",
-        body: surveyResponseJson,
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        encoding: Encoding.getByName("utf-8"));
-    debugPrint("response statuscode ${response.statusCode}");
-    return response.statusCode;
+    try {
+      Response response = await cl.post(
+          Constants.host + "rest/api/v1/surveyResponse/create",
+          body: surveyResponseJson,
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          },
+          encoding: Encoding.getByName("utf-8"));
+      debugPrint("response statuscode ${response.statusCode}");
+      return response.statusCode;
+    }catch(e){
+      return HttpStatus.networkConnectTimeoutError;
+    }
   }
 
   void cleanUpDatabase() async {

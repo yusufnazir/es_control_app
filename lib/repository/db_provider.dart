@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
-import 'package:es_control_app/model/survey_response_group_model.dart';
+import 'package:es_control_app/model/survey_response_section_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/util/matrix_column_types.dart';
 import 'package:es_control_app/util/question_types.dart';
@@ -42,13 +43,13 @@ class DBProvider {
           "description TEXT,"
           "active BIT"
           ")");
-      await db.execute("CREATE TABLE ${SurveyGroup.tableSurveyGroups} ("
-          "${SurveyGroup.columnId} INTEGER PRIMARY KEY,"
-          "${SurveyGroup.columnActive} BIT,"
-          "${SurveyGroup.columnName} TEXT,"
-          "${SurveyGroup.columnDescription} TEXT,"
-          "${SurveyGroup.columnSurveyId} INTEGER,"
-          "${SurveyGroup.columnEnableApplicability} BIT"
+      await db.execute("CREATE TABLE ${SurveySection.tableSurveySections} ("
+          "${SurveySection.columnId} INTEGER PRIMARY KEY,"
+          "${SurveySection.columnActive} BIT,"
+          "${SurveySection.columnName} TEXT,"
+          "${SurveySection.columnDescription} TEXT,"
+          "${SurveySection.columnSurveyId} INTEGER,"
+          "${SurveySection.columnEnableApplicability} BIT"
           ")");
       await db.execute("CREATE TABLE SurveyQuestions ("
           "id INTEGER PRIMARY KEY,"
@@ -61,7 +62,7 @@ class DBProvider {
           "required BIT,"
           "required_error TEXT,"
           "multiple_selection BIT,"
-          "group_id INTEGER"
+          "section_id INTEGER"
           ")");
       await db.execute("CREATE TABLE SurveyQuestionAnswerChoices ("
           "id INTEGER PRIMARY KEY,"
@@ -89,22 +90,24 @@ class DBProvider {
           "${SurveyQuestionAnswerChoiceSelection.columnSurveyQuestionAnswerChoiceId} INTEGER,"
           "${SurveyQuestionAnswerChoiceSelection.columnLabel} TEXT"
           ")");
-      await db.execute("CREATE TABLE SurveyResponses ("
-          "unique_id TEXT PRIMARY KEY,"
-          "id INTEGER,"
-          "active BIT,"
-          "survey_id INTEGER,"
-          "form_name TEXT,"
-          "created_on TEXT"
+      await db.execute("CREATE TABLE ${SurveyResponse.tableSurveyResponses} ("
+          "${SurveyResponse.columnUniqueId} TEXT PRIMARY KEY,"
+          "${SurveyResponse.columnId} INTEGER,"
+          "${SurveyResponse.columnActive} BIT,"
+          "${SurveyResponse.columnSurveyId} INTEGER,"
+          "${SurveyResponse.columnFormName} TEXT,"
+          "${SurveyResponse.columnCreatedOn} INTEGER,"
+          "${SurveyResponse.columnUploaded} BIT,"
+          "${SurveyResponse.columnUsername} TEXT"
           ")");
       await db.execute(
-          "CREATE TABLE ${SurveyResponseGroup.tableSurveyResponseGroups} ("
-          "${SurveyResponseGroup.columnUniqueId} TEXT PRIMARY KEY,"
-          "${SurveyResponseGroup.columnId} INTEGER,"
-          "${SurveyResponseGroup.columnActive} BIT,"
-          "${SurveyResponseGroup.columnSurveyResponseUniqueId} TEXT,"
-          "${SurveyResponseGroup.columnSurveyGroupId} INTEGER,"
-          "${SurveyResponseGroup.columnApplicable} BIT"
+          "CREATE TABLE ${SurveyResponseSection.tableSurveyResponseSections} ("
+          "${SurveyResponseSection.columnUniqueId} TEXT PRIMARY KEY,"
+          "${SurveyResponseSection.columnId} INTEGER,"
+          "${SurveyResponseSection.columnActive} BIT,"
+          "${SurveyResponseSection.columnSurveyResponseUniqueId} TEXT,"
+          "${SurveyResponseSection.columnSurveySectionId} INTEGER,"
+          "${SurveyResponseSection.columnApplicable} BIT"
           ")");
       await db.execute(
           "CREATE TABLE ${SurveyResponseAnswer.tableSurveyResponseAnswers} ("
@@ -126,7 +129,7 @@ class DBProvider {
   deleteAll() async {
     final db = await database;
     await db.rawDelete("Delete from Surveys");
-    await db.rawDelete("Delete from SurveyGroups");
+    await db.rawDelete("Delete from SurveySections");
     await db.rawDelete("Delete from SurveyQuestions");
     await db.rawDelete("Delete from SurveyQuestionAnswerChoices");
     await db.rawDelete("Delete from SurveyQuestionAnswerChoiceSelections");
@@ -150,15 +153,26 @@ class DBProvider {
     final db = await database;
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into ${SurveyResponse.tableSurveyResponses} (${SurveyResponse.columnId},${SurveyResponse.columnUniqueId}, ${SurveyResponse.columnSurveyId},${SurveyResponse.columnFormName},${SurveyResponse.columnCreatedOn},${SurveyResponse.columnActive})"
-        " VALUES (?,?,?,?,?,?)",
+        "INSERT Into ${SurveyResponse.tableSurveyResponses} "
+            "(${SurveyResponse.columnId},"
+            "${SurveyResponse.columnUniqueId}, "
+            "${SurveyResponse.columnSurveyId},"
+            "${SurveyResponse.columnFormName},"
+            "${SurveyResponse.columnCreatedOn},"
+            "${SurveyResponse.columnActive},"
+            "${SurveyResponse.columnUploaded},"
+            "${SurveyResponse.columnUsername}"
+            ")"
+        " VALUES (?,?,?,?,?,?,?,?)",
         [
           surveyResponse.id,
           surveyResponse.uniqueId,
           surveyResponse.surveyId,
           surveyResponse.formName,
-          DateFormat('yyyy-MM-dd – kk:mm').format(surveyResponse.createdOn),
-          surveyResponse.active
+          surveyResponse.createdOn.microsecondsSinceEpoch,
+          surveyResponse.active,
+          surveyResponse.uploaded,
+          surveyResponse.username
         ]);
     return raw;
   }
@@ -171,6 +185,16 @@ class DBProvider {
     return res;
   }
 
+  Future<SurveyResponse> updateSurveyResponseUploaded(String uniqueId, bool uploaded) async {
+    final db = await database;
+    var res = await db.update(SurveyResponse.tableSurveyResponses,
+        {SurveyResponse.columnUploaded: uploaded},
+        where: "${SurveyResponse.columnUniqueId} = ? ",
+        whereArgs: [uniqueId]);
+
+    return await getSurveyResponseByUniqueId(uniqueId);
+  }
+
   deleteSurveyResponse(int id) async {
     final db = await database;
     var delete = db.delete(SurveyResponse.tableSurveyResponses,
@@ -181,7 +205,7 @@ class DBProvider {
   Future<List<SurveyResponse>> getAllSurveyResponses(int surveyId) async {
     final db = await database;
     var res = await db.query(SurveyResponse.tableSurveyResponses,
-        where: "${SurveyResponse.columnSurveyId}=?", whereArgs: [surveyId]);
+        where: "${SurveyResponse.columnSurveyId}=?", whereArgs: [surveyId],orderBy: SurveyResponse.columnCreatedOn+" desc");
     List<SurveyResponse> list = res.isNotEmpty
         ? res.map((c) => SurveyResponse.fromDbMap(c)).toList()
         : [];
@@ -329,7 +353,7 @@ class DBProvider {
     //insert to the table using the new id
     var raw = await db.rawInsert(
         "INSERT Into SurveyQuestions (id,active,survey_id,question,question_description,order_,question_type,required,required_error,"
-        "multiple_selection, group_id)"
+        "multiple_selection, section_id)"
         " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         [
           surveyQuestion.id,
@@ -342,7 +366,7 @@ class DBProvider {
           surveyQuestion.required,
           surveyQuestion.requiredError,
           surveyQuestion.multipleSelection,
-          surveyQuestion.groupId,
+          surveyQuestion.sectionId,
         ]);
     return raw;
   }
@@ -540,82 +564,82 @@ class DBProvider {
     return list;
   }
 
-  Future<SurveyGroup> getSurveyGroup(int id) async {
+  Future<SurveySection> getSurveySection(int id) async {
     final db = await database;
-    var res = await db.query(SurveyGroup.tableSurveyGroups,
-        where: "${SurveyGroup.columnId} = ?", whereArgs: [id]);
-    return res.isNotEmpty ? SurveyGroup.fromDbMap(res.first) : null;
+    var res = await db.query(SurveySection.tableSurveySections,
+        where: "${SurveySection.columnId} = ?", whereArgs: [id]);
+    return res.isNotEmpty ? SurveySection.fromDbMap(res.first) : null;
   }
 
-  createSurveyGroup(SurveyGroup surveyGroup) async {
+  createSurveySection(SurveySection surveySection) async {
     final db = await database;
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into ${SurveyGroup.tableSurveyGroups} (${SurveyGroup.columnId},${SurveyGroup.columnSurveyId},${SurveyGroup.columnName},${SurveyGroup.columnDescription},${SurveyGroup.columnActive},${SurveyGroup.columnEnableApplicability})"
+        "INSERT Into ${SurveySection.tableSurveySections} (${SurveySection.columnId},${SurveySection.columnSurveyId},${SurveySection.columnName},${SurveySection.columnDescription},${SurveySection.columnActive},${SurveySection.columnEnableApplicability})"
         " VALUES (?,?,?,?,?,?)",
         [
-          surveyGroup.id,
-          surveyGroup.surveyId,
-          surveyGroup.name,
-          surveyGroup.description,
-          surveyGroup.active,
-          surveyGroup.enableApplicability
+          surveySection.id,
+          surveySection.surveyId,
+          surveySection.name,
+          surveySection.description,
+          surveySection.active,
+          surveySection.enableApplicability
         ]);
     return raw;
   }
 
-  updateSurveyGroup(SurveyGroup surveyGroup) async {
+  updateSurveySection(SurveySection surveySection) async {
     final db = await database;
     var res = await db.update(
-        SurveyGroup.tableSurveyGroups, surveyGroup.toDbMap(),
-        where: "${SurveyGroup.columnId} = ?", whereArgs: [surveyGroup.id]);
+        SurveySection.tableSurveySections, surveySection.toDbMap(),
+        where: "${SurveySection.columnId} = ?", whereArgs: [surveySection.id]);
     return res;
   }
 
-  deleteSurveyGroup(int id) async {
+  deleteSurveySection(int id) async {
     final db = await database;
-    var delete = db.delete(SurveyGroup.tableSurveyGroups,
-        where: "${SurveyGroup.columnId} = ?", whereArgs: [id]);
+    var delete = db.delete(SurveySection.tableSurveySections,
+        where: "${SurveySection.columnId} = ?", whereArgs: [id]);
     return delete;
   }
 
-  Future<List<SurveyGroup>> getAllSurveyGroups() async {
+  Future<List<SurveySection>> getAllSurveySections() async {
     final db = await database;
-    var res = await db.query(SurveyGroup.tableSurveyGroups);
-    List<SurveyGroup> list =
-        res.isNotEmpty ? res.map((c) => SurveyGroup.fromDbMap(c)).toList() : [];
+    var res = await db.query(SurveySection.tableSurveySections);
+    List<SurveySection> list =
+        res.isNotEmpty ? res.map((c) => SurveySection.fromDbMap(c)).toList() : [];
     return list;
   }
 
-  createSurveyResponseGroup(SurveyResponseGroup surveyResponseGroup) async {
+  createSurveyResponseSection(SurveyResponseSection surveyResponseSection) async {
     final db = await database;
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into ${SurveyResponseGroup.tableSurveyResponseGroups} "
-        "(${SurveyResponseGroup.columnSurveyGroupId},"
-        "${SurveyResponseGroup.columnSurveyResponseUniqueId}, "
-        "${SurveyResponseGroup.columnActive}, "
-        "${SurveyResponseGroup.columnApplicable},"
-        "${SurveyResponseGroup.columnUniqueId})"
+        "INSERT Into ${SurveyResponseSection.tableSurveyResponseSections} "
+        "(${SurveyResponseSection.columnSurveySectionId},"
+        "${SurveyResponseSection.columnSurveyResponseUniqueId}, "
+        "${SurveyResponseSection.columnActive}, "
+        "${SurveyResponseSection.columnApplicable},"
+        "${SurveyResponseSection.columnUniqueId})"
         " VALUES (?,?,?,?,?)",
         [
-          surveyResponseGroup.surveyGroupId,
-          surveyResponseGroup.surveyResponseUniqueId,
-          surveyResponseGroup.active,
-          surveyResponseGroup.applicable,
-          surveyResponseGroup.uniqueId,
+          surveyResponseSection.surveySectionId,
+          surveyResponseSection.surveyResponseUniqueId,
+          surveyResponseSection.active,
+          surveyResponseSection.applicable,
+          surveyResponseSection.uniqueId,
         ]);
     return raw;
   }
 
-  Future<SurveyResponseGroup> getSurveyResponseGroupByResponseAndGroup(
-      String surveyResponseUniqueId, int surveyGroupId) async {
+  Future<SurveyResponseSection> getSurveyResponseSectionByResponseAndSection(
+      String surveyResponseUniqueId, int surveySectionId) async {
     final db = await database;
-    var res = await db.query(SurveyResponseGroup.tableSurveyResponseGroups,
-        where: "${SurveyResponseGroup.columnSurveyResponseUniqueId} = ? "
-            "and ${SurveyResponseGroup.columnSurveyGroupId} = ? ",
-        whereArgs: [surveyResponseUniqueId, surveyGroupId]);
-    return res.isNotEmpty ? SurveyResponseGroup.fromDbMap(res.first) : null;
+    var res = await db.query(SurveyResponseSection.tableSurveyResponseSections,
+        where: "${SurveyResponseSection.columnSurveyResponseUniqueId} = ? "
+            "and ${SurveyResponseSection.columnSurveySectionId} = ? ",
+        whereArgs: [surveyResponseUniqueId, surveySectionId]);
+    return res.isNotEmpty ? SurveyResponseSection.fromDbMap(res.first) : null;
   }
 
   Future<List<SurveyQuestionAnswerChoiceSelection>>
@@ -915,35 +939,35 @@ class DBProvider {
     }
   }
 
-  void updateSurveyResponseGroup(
-      String surveyResponseUniqueId, int surveyGroupId, bool selected) async {
+  void updateSurveyResponseSection(
+      String surveyResponseUniqueId, int surveySectionId, bool selected) async {
     final db = await database;
-    var res = await db.query(SurveyResponseGroup.tableSurveyResponseGroups,
-        where: "${SurveyResponseGroup.columnSurveyResponseUniqueId}=? "
-            "and ${SurveyResponseGroup.columnSurveyGroupId}=? ",
+    var res = await db.query(SurveyResponseSection.tableSurveyResponseSections,
+        where: "${SurveyResponseSection.columnSurveyResponseUniqueId}=? "
+            "and ${SurveyResponseSection.columnSurveySectionId}=? ",
         whereArgs: [
           surveyResponseUniqueId,
-          surveyGroupId,
+          surveySectionId,
         ]);
-    SurveyResponseGroup surveyResponseGroup =
-        res.isNotEmpty ? SurveyResponseGroup.fromDbMap(res.first) : null;
+    SurveyResponseSection surveyResponseSection =
+        res.isNotEmpty ? SurveyResponseSection.fromDbMap(res.first) : null;
 
-    if (surveyResponseGroup == null) {
+    if (surveyResponseSection == null) {
       Uuid uuid = Uuid();
       String uniqueId = uuid.v4();
-      SurveyResponseGroup surveyResponseGroup = SurveyResponseGroup(
+      surveyResponseSection = SurveyResponseSection(
           surveyResponseUniqueId: surveyResponseUniqueId,
           active: true,
           uniqueId: uniqueId,
           applicable: selected,
-          surveyGroupId: surveyGroupId);
-      await createSurveyResponseGroup(surveyResponseGroup);
+          surveySectionId: surveySectionId);
+      await createSurveyResponseSection(surveyResponseSection);
     } else {
-      await db.update(SurveyResponseGroup.tableSurveyResponseGroups,
-          {SurveyResponseGroup.columnApplicable: selected},
-          where: "${SurveyResponseGroup.columnSurveyResponseUniqueId} = ? "
-              "and ${SurveyResponseGroup.columnSurveyGroupId} = ?",
-          whereArgs: [surveyResponseUniqueId, surveyGroupId]);
+      await db.update(SurveyResponseSection.tableSurveyResponseSections,
+          {SurveyResponseSection.columnApplicable: selected},
+          where: "${SurveyResponseSection.columnSurveyResponseUniqueId} = ? "
+              "and ${SurveyResponseSection.columnSurveySectionId} = ?",
+          whereArgs: [surveyResponseUniqueId, surveySectionId]);
     }
   }
 }

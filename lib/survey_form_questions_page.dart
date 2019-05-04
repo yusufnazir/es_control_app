@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/model/survey_group_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/survey/question_generator.dart';
 import 'package:es_control_app/util/question_validator.dart';
@@ -34,8 +34,8 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   List<SurveyQuestion> surveyQuestions = List<SurveyQuestion>();
-  List<SurveyGroup> surveyGroups = List<SurveyGroup>();
-  Map<int, List<SurveyQuestion>> questionGroups;
+  List<SurveySection> surveySections = List<SurveySection>();
+  Map<int, List<SurveyQuestion>> questionsBySectionMap;
   var drawerQuestionListing;
   int requiredQuestionId;
   SurveyQuestion surveyQuestionRequired;
@@ -97,13 +97,13 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
               child: PreloadPageView.builder(
                 controller: _preLoadController,
                 preloadPagesCount: 0,
-                itemCount: surveyGroups.length,
+                itemCount: surveySections.length,
                 itemBuilder: (BuildContext context, int position) {
-                  SurveyGroup surveyGroup = surveyGroups[position];
+                  SurveySection surveySection = surveySections[position];
                   return QuestionGeneratorWidget(
                       widget.surveyResponse,
-                      questionGroups[surveyGroup.id],
-                      surveyGroups[position],
+                      questionsBySectionMap[surveySection.id],
+                      surveySections[position],
                       requiredQuestionId);
                 },
               ),
@@ -142,13 +142,13 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   getSurveyQuestions() async {
     List<SurveyQuestion> questions =
         await DBProvider.db.getAllSurveyQuestionsForSurvey(widget.survey.id);
-    questionGroups = groupBy(
-        questions, (SurveyQuestion surveyQuestion) => surveyQuestion.groupId);
-    List<int> groupIds = questionGroups.keys.toList();
+    questionsBySectionMap = groupBy(
+        questions, (SurveyQuestion surveyQuestion) => surveyQuestion.sectionId);
+    List<int> sectionIds = questionsBySectionMap.keys.toList();
 
-    for (int groupId in groupIds) {
-      SurveyGroup surveyGroup = await DBProvider.db.getSurveyGroup(groupId);
-      surveyGroups.add(surveyGroup);
+    for (int sectionId in sectionIds) {
+      SurveySection surveySection = await DBProvider.db.getSurveySection(sectionId);
+      surveySections.add(surveySection);
     }
     setState(() {
       surveyQuestions.addAll(questions);
@@ -165,9 +165,9 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   FutureBuilder createDrawerList() {
     List widgets = List<Ink>();
 
-    navigateToSelectedQuestion(SurveyGroup surveyGroup) {
+    navigateToSelectedQuestion(SurveySection surveySection) {
       requiredQuestionId = null;
-      int indexOf = surveyGroups.indexOf(surveyGroup);
+      int indexOf = surveySections.indexOf(surveySection);
       _preLoadController.jumpToPage(indexOf);
       Navigator.pop(context);
     }
@@ -181,24 +181,24 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
     FutureBuilder futureBuilder =
         FutureBuilder(builder: (BuildContext context, AsyncSnapshot snapshot) {
       widgets.clear();
-      for (SurveyGroup surveyGroup in surveyGroups) {
-        Color value = widget.map[surveyGroup.id] == null
+      for (SurveySection surveySection in surveySections) {
+        Color value = widget.map[surveySection.id] == null
             ? Theme.of(context).accentColor
-            : widget.map[surveyGroup.id];
+            : widget.map[surveySection.id];
         Ink ink = Ink(
           color: value,
           child: ListTile(
             onTap: () {
-              navigateToSelectedQuestion(surveyGroup);
+              navigateToSelectedQuestion(surveySection);
               value = Theme.of(this.context).primaryColorLight;
 //              value = Colors.blue;
               resetColors();
               setState(() {
-                widget.map[surveyGroup.id] = value;
+                widget.map[surveySection.id] = value;
               });
             },
             title: new Text(
-              surveyGroup.name,
+              surveySection.name,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -236,10 +236,10 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
       setState(() {
         requiredQuestionId = surveyQuestionRequired.id;
       });
-      int groupId = surveyQuestionRequired.groupId;
-      SurveyGroup surveyGroup = surveyGroups
-          .firstWhere((SurveyGroup surveyGroup) => surveyGroup.id == groupId);
-      int indexOf = surveyGroups.indexOf(surveyGroup);
+      int sectionId = surveyQuestionRequired.sectionId;
+      SurveySection surveySection = surveySections
+          .firstWhere((SurveySection surveySection) => surveySection.id == sectionId);
+      int indexOf = surveySections.indexOf(surveySection);
       _preLoadController.jumpToPage(indexOf);
 
       Flushbar(

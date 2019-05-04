@@ -2,6 +2,7 @@ import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class FormCardTile extends StatefulWidget {
   final Function(Function callBack) prepareForUpload;
@@ -9,7 +10,7 @@ class FormCardTile extends StatefulWidget {
   final SurveyResponse surveyResponse;
 
   FormCardTile(
-      {this.prepareForUpload, this.surveyFormSelected, this.surveyResponse});
+      {this.prepareForUpload, this.surveyFormSelected, this.surveyResponse, Key key}):super(key:key);
 
   @override
   State<StatefulWidget> createState() {
@@ -21,8 +22,15 @@ class FormCardTileState extends State<FormCardTile> {
   bool uploaded = false;
 
   @override
+  void initState() {
+    super.initState();
+    uploaded = widget.surveyResponse.uploaded;
+  }
+
+  @override
   Widget build(BuildContext context) {
     updateState() {
+      debugPrint("calling update state");
       setState(() {
         uploaded = !uploaded;
       });
@@ -87,7 +95,7 @@ class FormCardTileState extends State<FormCardTile> {
         subtitle: Row(
           children: <Widget>[
             Icon(Icons.date_range, color: Colors.yellowAccent),
-            Text(" ${widget.surveyResponse.createdOn}",
+            Text(" ${DateFormat(Constants.dateFormat).format(widget.surveyResponse.createdOn)}",
                 style: TextStyle(color: Colors.white))
           ],
         ),

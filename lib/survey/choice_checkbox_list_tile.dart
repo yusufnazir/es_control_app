@@ -45,6 +45,7 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
           }
           setState(() {
             selected = false;
+//            debugPrint("selected $selected surveyQuestionAnswerChoice ${widget.surveyQuestionAnswerChoice.label}");
           });
         }
       }
@@ -90,6 +91,7 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
             widget.surveyResponse.uniqueId,
             widget.surveyQuestion.id,
             widget.surveyQuestionAnswerChoice.id);
+
     if (surveyResponseAnswer != null) {
       if (this.mounted) {
         if(widget.surveyQuestionAnswerChoice.isOther){
@@ -99,18 +101,21 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
           selected = surveyResponseAnswer.selected;
         });
       }
+
+      int makeSelectedQuestionRequired =
+          widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired;
+      if (makeSelectedQuestionRequired != null && !widget.streamController.isClosed) {
+//        debugPrint("trigger stream controller ${widget.surveyQuestionAnswerChoice.label} makeselectedquestion ${widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired}");
+        widget.streamController.add(
+          StreamControllerBeanChoice(
+              choiceId: widget.surveyQuestionAnswerChoice.id,
+              makeSelectedQuestionRequired:
+              widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired,
+              value: selected,surveyQuestionId: widget.surveyQuestion.id),
+        );
+      }
     }
-    int makeSelectedQuestionRequired =
-        widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired;
-    if (makeSelectedQuestionRequired != null && !widget.streamController.isClosed) {
-      widget.streamController.add(
-        StreamControllerBeanChoice(
-            choiceId: widget.surveyQuestionAnswerChoice.id,
-            makeSelectedQuestionRequired:
-                widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired,
-            value: selected,surveyQuestionId: widget.surveyQuestion.id),
-      );
-    }
+
   }
 
   void _onChange(bool value) async {
