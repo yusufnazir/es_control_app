@@ -54,9 +54,9 @@ class RestApi {
               surveyQuestionAnswerChoiceSelections);
         }
 
-        var response = await cl.get(Constants.getAllSurveyResponses);
-        List<SurveyResponse> surveyResponses = parseSurveyResponses(response.body);
-        manageSurveyResponses(surveyResponses);
+//        var response = await cl.get(Constants.getAllSurveyResponses);
+//        List<SurveyResponse> surveyResponses = parseSurveyResponses(response.body);
+//        manageSurveyResponses(surveyResponses);
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -137,8 +137,11 @@ class RestApi {
             await DBProvider.db
                 .getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
         if (existingSurveyQuestionAnswerChoice == null) {
+          debugPrint("surveyQuestionAnswerChoice $surveyQuestionAnswerChoice");
           await DBProvider.db
               .createSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
+          SurveyQuestionAnswerChoice questionAnswerChoice = await DBProvider.db.getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
+          debugPrint("surveyQuestionAnswerChoice $questionAnswerChoice");
         } else {
           await DBProvider.db
               .updateSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);

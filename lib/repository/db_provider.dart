@@ -1,18 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
-import 'package:es_control_app/model/survey_response_section_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
+import 'package:es_control_app/model/survey_response_section_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/util/matrix_column_types.dart';
 import 'package:es_control_app/util/question_types.dart';
-import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -35,7 +33,7 @@ class DBProvider {
   initDB() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "EsControl.db");
-    return await openDatabase(path, version: 1, onOpen: (db) {},
+    return await openDatabase(path, version: 2, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       await db.execute("CREATE TABLE Surveys ("
           "id INTEGER PRIMARY KEY,"
@@ -64,25 +62,25 @@ class DBProvider {
           "multiple_selection BIT,"
           "section_id INTEGER"
           ")");
-      await db.execute("CREATE TABLE SurveyQuestionAnswerChoices ("
-          "id INTEGER PRIMARY KEY,"
-          "survey_question_id INTEGER,"
-          "label TEXT,"
-          "question_type TEXT,"
-          "axis TEXT,"
-          "matrix_column_type TEXT,"
-          "index_ INTEGER,"
-          "min_length INTEGER,"
-          "max_length INTEGER,"
-          "min_value REAL,"
-          "max_value REAL,"
-          "min_date TEXT,"
-          "max_date TEXT,"
-          "validate BIT,"
-          "validation_error TEXT,"
-          "multiple_selection BIT,"
-          "is_other BIT,"
-          "make_selected_question_required INTEGER"
+      await db.execute("CREATE TABLE ${SurveyQuestionAnswerChoice.tableSurveyQuestionAnswerChoices} ("
+          "${SurveyQuestionAnswerChoice.columnId} INTEGER PRIMARY KEY,"
+          "${SurveyQuestionAnswerChoice.columnSurveyQuestionId} INTEGER,"
+          "${SurveyQuestionAnswerChoice.columnLabel} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnQuestionType} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnAxis} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnMatrixColumnType} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnIndex} INTEGER,"
+          "${SurveyQuestionAnswerChoice.columnMinLength} INTEGER,"
+          "${SurveyQuestionAnswerChoice.columnMaxLength} INTEGER,"
+          "${SurveyQuestionAnswerChoice.columnMinValue} REAL,"
+          "${SurveyQuestionAnswerChoice.columnMaxValue} REAL,"
+          "${SurveyQuestionAnswerChoice.columnMinDate} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnMaxDate} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnValidate} BIT,"
+          "${SurveyQuestionAnswerChoice.columnValidationError} TEXT,"
+          "${SurveyQuestionAnswerChoice.columnMultipleSelection} BIT,"
+          "${SurveyQuestionAnswerChoice.columnIsOther} BIT,"
+          "${SurveyQuestionAnswerChoice.columnMakeSelectedQuestionRequired} INTEGER"
           ")");
       await db.execute(
           "CREATE TABLE ${SurveyQuestionAnswerChoiceSelection.tableSurveyQuestionAnswerChoiceSelections} ("
@@ -138,7 +136,7 @@ class DBProvider {
   Future<SurveyResponse> getSurveyResponse(int id) async {
     final db = await database;
     var res = await db.query(SurveyResponse.tableSurveyResponses,
-        where: "id = ?", whereArgs: [id]);
+        where: "${SurveyResponse.columnId} = ?", whereArgs: [id]);
     return res.isNotEmpty ? SurveyResponse.fromDbMap(res.first) : null;
   }
 
@@ -154,15 +152,15 @@ class DBProvider {
     //insert to the table using the new id
     var raw = await db.rawInsert(
         "INSERT Into ${SurveyResponse.tableSurveyResponses} "
-            "(${SurveyResponse.columnId},"
-            "${SurveyResponse.columnUniqueId}, "
-            "${SurveyResponse.columnSurveyId},"
-            "${SurveyResponse.columnFormName},"
-            "${SurveyResponse.columnCreatedOn},"
-            "${SurveyResponse.columnActive},"
-            "${SurveyResponse.columnUploaded},"
-            "${SurveyResponse.columnUsername}"
-            ")"
+        "(${SurveyResponse.columnId},"
+        "${SurveyResponse.columnUniqueId}, "
+        "${SurveyResponse.columnSurveyId},"
+        "${SurveyResponse.columnFormName},"
+        "${SurveyResponse.columnCreatedOn},"
+        "${SurveyResponse.columnActive},"
+        "${SurveyResponse.columnUploaded},"
+        "${SurveyResponse.columnUsername}"
+        ")"
         " VALUES (?,?,?,?,?,?,?,?)",
         [
           surveyResponse.id,
@@ -185,12 +183,12 @@ class DBProvider {
     return res;
   }
 
-  Future<SurveyResponse> updateSurveyResponseUploaded(String uniqueId, bool uploaded) async {
+  Future<SurveyResponse> updateSurveyResponseUploaded(
+      String uniqueId, bool uploaded) async {
     final db = await database;
     var res = await db.update(SurveyResponse.tableSurveyResponses,
         {SurveyResponse.columnUploaded: uploaded},
-        where: "${SurveyResponse.columnUniqueId} = ? ",
-        whereArgs: [uniqueId]);
+        where: "${SurveyResponse.columnUniqueId} = ? ", whereArgs: [uniqueId]);
 
     return await getSurveyResponseByUniqueId(uniqueId);
   }
@@ -205,7 +203,9 @@ class DBProvider {
   Future<List<SurveyResponse>> getAllSurveyResponses(int surveyId) async {
     final db = await database;
     var res = await db.query(SurveyResponse.tableSurveyResponses,
-        where: "${SurveyResponse.columnSurveyId}=?", whereArgs: [surveyId],orderBy: SurveyResponse.columnCreatedOn+" desc");
+        where: "${SurveyResponse.columnSurveyId}=?",
+        whereArgs: [surveyId],
+        orderBy: SurveyResponse.columnCreatedOn + " desc");
     List<SurveyResponse> list = res.isNotEmpty
         ? res.map((c) => SurveyResponse.fromDbMap(c)).toList()
         : [];
@@ -215,7 +215,7 @@ class DBProvider {
   Future<SurveyResponseAnswer> getSurveyResponseAnswer(int id) async {
     final db = await database;
     var res = await db.query(SurveyResponseAnswer.tableSurveyResponseAnswers,
-        where: "id = ?", whereArgs: [id]);
+        where: "${SurveyResponseAnswer.columnId} = ?", whereArgs: [id]);
     return res.isNotEmpty ? SurveyResponseAnswer.fromDbMap(res.first) : null;
   }
 
@@ -486,8 +486,8 @@ class DBProvider {
   Future<SurveyQuestionAnswerChoice> getSurveyQuestionAnswerChoice(
       int id) async {
     final db = await database;
-    var res = await db.query("SurveyQuestionAnswerChoices",
-        where: "id = ?", whereArgs: [id], columns: ["id"]);
+    var res = await db.query(SurveyQuestionAnswerChoice.tableSurveyQuestionAnswerChoices,
+        where: "${SurveyQuestionAnswerChoice.columnId} = ?", whereArgs: [id]);
     return res.isNotEmpty
         ? SurveyQuestionAnswerChoice.fromDbMap(res.first)
         : null;
@@ -498,9 +498,25 @@ class DBProvider {
     final db = await database;
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into SurveyQuestionAnswerChoices (id,survey_question_id,label,question_type,axis,matrix_column_type,"
-        "index_,min_length,max_length,min_value,max_value,min_date,max_date,validate,validation_error,multiple_selection,"
-        "is_other,make_selected_question_required)"
+        "INSERT Into ${SurveyQuestionAnswerChoice.tableSurveyQuestionAnswerChoices} ("
+        "${SurveyQuestionAnswerChoice.columnId},"
+        "${SurveyQuestionAnswerChoice.columnSurveyQuestionId},"
+        "${SurveyQuestionAnswerChoice.columnLabel},"
+        "${SurveyQuestionAnswerChoice.columnQuestionType},"
+        "${SurveyQuestionAnswerChoice.columnAxis},"
+        "${SurveyQuestionAnswerChoice.columnMatrixColumnType},"
+        "${SurveyQuestionAnswerChoice.columnIndex},"
+        "${SurveyQuestionAnswerChoice.columnMinLength},"
+        "${SurveyQuestionAnswerChoice.columnMaxLength},"
+        "${SurveyQuestionAnswerChoice.columnMinValue},"
+        "${SurveyQuestionAnswerChoice.columnMaxValue},"
+        "${SurveyQuestionAnswerChoice.columnMinDate},"
+        "${SurveyQuestionAnswerChoice.columnMaxDate},"
+        "${SurveyQuestionAnswerChoice.columnValidate},"
+        "${SurveyQuestionAnswerChoice.columnValidationError},"
+        "${SurveyQuestionAnswerChoice.columnMultipleSelection},"
+        "${SurveyQuestionAnswerChoice.columnIsOther},"
+        "${SurveyQuestionAnswerChoice.columnMakeSelectedQuestionRequired})"
         " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [
           surveyQuestionAnswerChoice.id,
@@ -544,7 +560,7 @@ class DBProvider {
   Future<List<SurveyQuestionAnswerChoice>>
       getAllSurveyQuestionAnswerChoices() async {
     final db = await database;
-    var res = await db.query("SurveyQuestionAnswerChoices");
+    var res = await db.query(SurveyQuestionAnswerChoice.tableSurveyQuestionAnswerChoices);
     List<SurveyQuestionAnswerChoice> list = res.isNotEmpty
         ? res.map((c) => SurveyQuestionAnswerChoice.fromDbMap(c)).toList()
         : [];
@@ -554,7 +570,7 @@ class DBProvider {
   Future<List<SurveyQuestionAnswerChoice>>
       getSurveyQuestionAnswerChoiceByQuestion(int surveyQuestionId) async {
     final db = await database;
-    var res = await db.query("SurveyQuestionAnswerChoices",
+    var res = await db.query(SurveyQuestionAnswerChoice.tableSurveyQuestionAnswerChoices,
         where: "${SurveyQuestionAnswerChoice.columnSurveyQuestionId}=?",
         whereArgs: [surveyQuestionId],
         orderBy: SurveyQuestionAnswerChoice.columnIndex);
@@ -606,12 +622,14 @@ class DBProvider {
   Future<List<SurveySection>> getAllSurveySections() async {
     final db = await database;
     var res = await db.query(SurveySection.tableSurveySections);
-    List<SurveySection> list =
-        res.isNotEmpty ? res.map((c) => SurveySection.fromDbMap(c)).toList() : [];
+    List<SurveySection> list = res.isNotEmpty
+        ? res.map((c) => SurveySection.fromDbMap(c)).toList()
+        : [];
     return list;
   }
 
-  createSurveyResponseSection(SurveyResponseSection surveyResponseSection) async {
+  createSurveyResponseSection(
+      SurveyResponseSection surveyResponseSection) async {
     final db = await database;
     //insert to the table using the new id
     var raw = await db.rawInsert(

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 class QuestionValidator {
   List<int> questionsToSkip = List<int>();
   Map<int, int> _requiredQuestionsSectionMap = Map<int, int>();
+  List<int> madeRequiredList = List<int>();
   final String surveyResponseUniqueId;
   SurveyQuestion _surveyQuestion;
   final int surveyId;
@@ -25,6 +26,11 @@ class QuestionValidator {
   void validateSurveyQuestion(SurveyQuestion surveyQuestion) async {
     if (!questionsToSkip.contains(surveyQuestion.id)) {
       bool required = surveyQuestion.required;
+      if (!required) {
+        if (madeRequiredList.contains(surveyQuestion.id)) {
+          required = true;
+        }
+      }
       if (required) {
         String questionType = surveyQuestion.questionType;
         switch (questionType) {
@@ -60,10 +66,10 @@ class QuestionValidator {
 //    debugPrint("surveyQuestion $surveyQuestion");
     bool multipleSelection = surveyQuestion.multipleSelection;
     if (!multipleSelection) {
+//      List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices = await DBProvider.db.getSurveyQuestionAnswerChoiceByQuestion(surveyQuestion.id);
       List<SurveyResponseAnswer> surveyResponseAnswers = await DBProvider.db
           .getSurveyResponseAnswerForChoicesByResponseAndQuestion(
               surveyResponseUniqueId, surveyQuestion.id);
-//      debugPrint("surveyResponseAnswers ${surveyResponseAnswers.length}");
       if (surveyResponseAnswers == null || surveyResponseAnswers.length == 0) {
         this._surveyQuestion = surveyQuestion;
         this._requiredQuestionsSectionMap[surveyQuestion.id] =
@@ -74,6 +80,8 @@ class QuestionValidator {
         int choiceId = surveyResponseAnswer.surveyQuestionAnswerChoiceRowId;
         SurveyQuestionAnswerChoice surveyQuestionAnswerChoice =
             await DBProvider.db.getSurveyQuestionAnswerChoice(choiceId);
+        debugPrint("SurveyQuestionAnswerChoice $surveyQuestionAnswerChoice");
+        // for other
         bool isOther = surveyQuestionAnswerChoice.isOther;
         if (!surveyResponseAnswer.selected ||
             (isOther &&
@@ -83,6 +91,12 @@ class QuestionValidator {
           this._requiredQuestionsSectionMap[surveyQuestion.id] =
               surveyQuestion.sectionId;
           return;
+        }
+
+        int questionId =
+            surveyQuestionAnswerChoice.makeSelectedQuestionRequired;
+        if (questionId != null) {
+          madeRequiredList.add(questionId);
         }
       }
     }
