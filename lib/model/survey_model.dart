@@ -1,6 +1,12 @@
 import 'dart:convert';
 
 class Survey {
+  static final String tableSurveys = "Surveys";
+  static final String columnId = "id";
+  static final String columnName = "name";
+  static final String columnDescription = "description";
+  static final String columnActive = "active";
+
   int id;
   String name;
   String description;
@@ -23,25 +29,35 @@ class Survey {
     return json.encode(dyn);
   }
 
-  factory Survey.fromJsonMap(Map<String, dynamic> json) => new Survey(
+  factory Survey.fromJsonMap(Map<String, dynamic> json) {
+    if (json != null) {
+      return Survey(
         id: json["id"],
         name: json["name"],
         description: json["description"],
         active: json["active"] == true,
       );
+    }
+    return null;
+  }
 
-  factory Survey.fromDbMap(Map<String, dynamic> json) => new Survey(
-    id: json["id"],
-    name: json["name"],
-    description: json["description"],
-    active: json["active"] == 1,
-  );
+  factory Survey.fromDbMap(Map<String, dynamic> json) {
+    if (json != null) {
+      return Survey(
+        id: json[columnId],
+        name: json[columnName],
+        description: json[columnDescription],
+        active: json[columnActive] == 1,
+      );
+    }
+    return null;
+  }
 
   Map<String, dynamic> toDbMap() => {
-        "id": id,
-        "name": name,
-        "description": description,
-        "active": active,
+        columnId: id,
+        columnName: name,
+        columnDescription: description,
+        columnActive: active,
       };
 
   @override

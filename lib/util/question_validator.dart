@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 class QuestionValidator {
   List<int> questionsToSkip = List<int>();
   Map<int, int> _requiredQuestionsSectionMap = Map<int, int>();
+  List<int> notApplicableSections = List<int>();
   List<int> madeRequiredList = List<int>();
+  List<int> madeRequiredGroupList = List<int>();
   final String surveyResponseUniqueId;
   SurveyQuestion _surveyQuestion;
   final int surveyId;
@@ -16,14 +18,25 @@ class QuestionValidator {
   QuestionValidator(this.surveyId, this.surveyResponseUniqueId);
 
   validateQuestions() async {
+    notApplicableSections = await DBProvider.db
+        .getAllApplicableGroupsForSurveyResponse(surveyResponseUniqueId);
     List<SurveyQuestion> allSurveyQuestions =
         await DBProvider.db.getAllSurveyQuestions(surveyId);
     for (SurveyQuestion surveyQuestion in allSurveyQuestions) {
-      await validateSurveyQuestion(surveyQuestion);
+      bool exit = await validateSurveyQuestion(surveyQuestion);
+      if(exit){
+        break;
+      }
     }
   }
 
-  void validateSurveyQuestion(SurveyQuestion surveyQuestion) async {
+  Future<bool> validateSurveyQuestion(SurveyQuestion surveyQuestion) async {
+    //skip not applicable grouped questions
+    if (surveyQuestion.sectionId != null &&
+        notApplicableSections.contains(surveyQuestion.sectionId)) {
+      return false;
+    }
+
     if (!questionsToSkip.contains(surveyQuestion.id)) {
       bool required = surveyQuestion.required;
       if (!required) {
@@ -31,24 +44,28 @@ class QuestionValidator {
           required = true;
         }
       }
+
+      if (surveyQuestion.groupId != null &&
+          madeRequiredGroupList.contains(surveyQuestion.groupId)) {
+        required = true;
+      }
+      debugPrint("surveyQuestion ${surveyQuestion.id} groupid ${surveyQuestion.groupId}");
       if (required) {
         String questionType = surveyQuestion.questionType;
         switch (questionType) {
           case question_type_single:
-            await validateSingle(surveyQuestion);
-            break;
+            return await validateSingle(surveyQuestion);
           case question_type_choices:
-            await validateChoices(surveyQuestion);
-            break;
+            return await validateChoices(surveyQuestion);
           case question_type_matrix:
-            await validateMatrix(surveyQuestion);
-            break;
+            return await validateMatrix(surveyQuestion);
         }
       }
     }
+    return false;
   }
 
-  void validateSingle(SurveyQuestion surveyQuestion) async {
+  Future<bool> validateSingle(SurveyQuestion surveyQuestion) async {
     SurveyResponseAnswer surveyResponseAnswer = await DBProvider.db
         .getSurveyResponseAnswerForSingleTextByResponseAndQuestion(
             surveyResponseUniqueId, surveyQuestion.id);
@@ -58,15 +75,14 @@ class QuestionValidator {
       this._surveyQuestion = surveyQuestion;
       this._requiredQuestionsSectionMap[surveyQuestion.id] =
           surveyQuestion.sectionId;
-      return;
+      return true;
     }
+    return false;
   }
 
-  void validateChoices(SurveyQuestion surveyQuestion) async {
-//    debugPrint("surveyQuestion $surveyQuestion");
+  Future<bool> validateChoices(SurveyQuestion surveyQuestion) async {
     bool multipleSelection = surveyQuestion.multipleSelection;
     if (!multipleSelection) {
-//      List<SurveyQuestionAnswerChoice> surveyQuestionAnswerChoices = await DBProvider.db.getSurveyQuestionAnswerChoiceByQuestion(surveyQuestion.id);
       List<SurveyResponseAnswer> surveyResponseAnswers = await DBProvider.db
           .getSurveyResponseAnswerForChoicesByResponseAndQuestion(
               surveyResponseUniqueId, surveyQuestion.id);
@@ -74,13 +90,12 @@ class QuestionValidator {
         this._surveyQuestion = surveyQuestion;
         this._requiredQuestionsSectionMap[surveyQuestion.id] =
             surveyQuestion.sectionId;
-        return;
+        return true;
       } else {
         SurveyResponseAnswer surveyResponseAnswer = surveyResponseAnswers[0];
         int choiceId = surveyResponseAnswer.surveyQuestionAnswerChoiceRowId;
         SurveyQuestionAnswerChoice surveyQuestionAnswerChoice =
             await DBProvider.db.getSurveyQuestionAnswerChoice(choiceId);
-        debugPrint("SurveyQuestionAnswerChoice $surveyQuestionAnswerChoice");
         // for other
         bool isOther = surveyQuestionAnswerChoice.isOther;
         if (!surveyResponseAnswer.selected ||
@@ -90,7 +105,7 @@ class QuestionValidator {
           this._surveyQuestion = surveyQuestion;
           this._requiredQuestionsSectionMap[surveyQuestion.id] =
               surveyQuestion.sectionId;
-          return;
+          return true;
         }
 
         int questionId =
@@ -98,8 +113,15 @@ class QuestionValidator {
         if (questionId != null) {
           madeRequiredList.add(questionId);
         }
+
+        int makeSelectedGroupRequired =
+            surveyQuestionAnswerChoice.makeSelectedGroupRequired;
+        if (makeSelectedGroupRequired != null) {
+          madeRequiredGroupList.add(makeSelectedGroupRequired);
+        }
       }
     }
+    return false;
   }
 
   SurveyQuestion get surveyQuestion => _surveyQuestion;
@@ -114,5 +136,7 @@ class QuestionValidator {
     _requiredQuestionsSectionMap = value;
   }
 
-  validateMatrix(SurveyQuestion surveyQuestion) {}
+  Future<bool> validateMatrix(SurveyQuestion surveyQuestion) async {
+    return false;
+  }
 }

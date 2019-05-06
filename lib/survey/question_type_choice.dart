@@ -14,11 +14,18 @@ import 'package:flutter/material.dart';
 class QuestionTypeChoice extends StatefulWidget {
   final SurveyResponse surveyResponse;
   final SurveyQuestion surveyQuestion;
-  final StreamController<StreamControllerBeanChoice> streamController;
+  final StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionRequired;
+  final StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionByGroupRequired;
   final int requiredQuestionId;
 
   QuestionTypeChoice(
-      this.surveyResponse, this.surveyQuestion, this.streamController,this.requiredQuestionId);
+      {this.surveyResponse,
+      this.surveyQuestion,
+      this.streamControllerMakeQuestionRequired,
+      this.streamControllerMakeQuestionByGroupRequired,
+      this.requiredQuestionId});
 
   @override
   State<StatefulWidget> createState() {
@@ -49,8 +56,12 @@ class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
           .getSurveyQuestionAnswerChoiceByQuestion(widget.surveyQuestion.id);
       commentWidgets.clear();
       for (SurveyQuestionAnswerChoice choice in choices) {
-        commentWidgets.add(ChoiceCheckboxListTile(widget.surveyResponse,
-            widget.surveyQuestion, choice, widget.streamController));
+        commentWidgets.add(ChoiceCheckboxListTile(
+            surveyResponse:widget.surveyResponse,
+            surveyQuestion:widget.surveyQuestion,
+            surveyQuestionAnswerChoice:choice,
+            streamControllerMakeQuestionRequired:widget.streamControllerMakeQuestionRequired,
+            streamControllerMakeQuestionByGroupRequired:widget.streamControllerMakeQuestionByGroupRequired));
       }
       return commentWidgets;
     }
@@ -60,20 +71,21 @@ class QuestionTypeChoiceState extends State<QuestionTypeChoice> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             return Padding(
-                  padding: EdgeInsets.only(right: 8.0, left: 8.0),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(Constants.borderRadius)),
-                    child: Column(
-                      children: <Widget>[
-                        CardHeader(widget.surveyQuestion, false, widget.requiredQuestionId),
-                         Column(
-                          children: commentWidgets,
-                        )
-                      ],
-                    ),
-                  ),
+              padding: EdgeInsets.only(right: 8.0, left: 8.0),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(Constants.borderRadius)),
+                child: Column(
+                  children: <Widget>[
+                    CardHeader(widget.surveyQuestion, false,
+                        widget.requiredQuestionId),
+                    Column(
+                      children: commentWidgets,
+                    )
+                  ],
+                ),
+              ),
             );
           } else {
             return SizedCircularProgressBar(

@@ -39,18 +39,24 @@ class SurveyResponseSection {
     return json.encode(dyn);
   }
 
-  factory SurveyResponseSection.fromJsonMap(Map<String, dynamic> json) =>
-      new SurveyResponseSection(
+  factory SurveyResponseSection.fromJsonMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyResponseSection(
           id: json["id"],
           uniqueId: json["uniqueId"],
           active: json["active"] == true,
           surveyResponseUniqueId: Utilities.getSurveyResponseUniqueIdFromJson(
               json["surveyResponseUniqueId"]),
-          surveySectionId: Utilities.getSectionIdFromJson(json["surveySectionId"]),
+          surveySectionId: Utilities.getSectionIdFromJson(
+              json["surveySectionId"]),
           applicable: json["applicable"] == true);
+    }
+    return null;
+  }
 
-  factory SurveyResponseSection.fromDbMap(Map<String, dynamic> json) =>
-      new SurveyResponseSection(
+  factory SurveyResponseSection.fromDbMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyResponseSection(
         id: json[columnId],
         uniqueId: json[columnUniqueId],
         surveyResponseUniqueId: json[columnSurveyResponseUniqueId],
@@ -58,6 +64,9 @@ class SurveyResponseSection {
         active: json[columnActive] == 1,
         applicable: json[columnApplicable] == 1,
       );
+    }
+    return null;
+  }
 
   Map<String, dynamic> toDbMap() => {
         columnId: id,

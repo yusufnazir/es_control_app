@@ -12,10 +12,15 @@ class ChoiceCheckboxListTile extends StatefulWidget {
   final SurveyResponse surveyResponse;
   final SurveyQuestion surveyQuestion;
   final SurveyQuestionAnswerChoice surveyQuestionAnswerChoice;
-  final StreamController<StreamControllerBeanChoice> streamController;
+  final StreamController<StreamControllerBeanChoice> streamControllerMakeQuestionRequired;
+  final StreamController<StreamControllerBeanChoice> streamControllerMakeQuestionByGroupRequired;
 
-  ChoiceCheckboxListTile(this.surveyResponse, this.surveyQuestion,
-      this.surveyQuestionAnswerChoice, this.streamController);
+  ChoiceCheckboxListTile(
+      {this.surveyResponse,
+      this.surveyQuestion,
+      this.surveyQuestionAnswerChoice,
+      this.streamControllerMakeQuestionRequired,
+      this.streamControllerMakeQuestionByGroupRequired});
 
   @override
   State<StatefulWidget> createState() {
@@ -33,23 +38,24 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
     super.initState();
     selected = false;
     isOtherFieldVisible = false;
-    widget.streamController.stream.listen((onData) {
+    widget.streamControllerMakeQuestionRequired.stream.listen((onData) {
       int surveyQuestionAnswerChoiceId = onData.choiceId;
       int surveyQuestionId = onData.surveyQuestionId;
-      if (surveyQuestionId==widget.surveyQuestion.id && !widget.surveyQuestion.multipleSelection &&
+      if (surveyQuestionId == widget.surveyQuestion.id &&
+          !widget.surveyQuestion.multipleSelection &&
           widget.surveyQuestionAnswerChoice.id !=
               surveyQuestionAnswerChoiceId) {
         if (this.mounted) {
-          if(widget.surveyQuestionAnswerChoice.isOther){
+          if (widget.surveyQuestionAnswerChoice.isOther) {
             isOtherFieldVisible = false;
           }
           setState(() {
             selected = false;
-//            debugPrint("selected $selected surveyQuestionAnswerChoice ${widget.surveyQuestionAnswerChoice.label}");
           });
         }
       }
     });
+
     getSelectedValue();
   }
 
@@ -94,7 +100,7 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
 
     if (surveyResponseAnswer != null) {
       if (this.mounted) {
-        if(widget.surveyQuestionAnswerChoice.isOther){
+        if (widget.surveyQuestionAnswerChoice.isOther) {
           isOtherFieldVisible = surveyResponseAnswer.selected;
         }
         setState(() {
@@ -102,20 +108,35 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
         });
       }
 
+      //required question
       int makeSelectedQuestionRequired =
           widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired;
-      if (makeSelectedQuestionRequired != null && !widget.streamController.isClosed) {
-//        debugPrint("trigger stream controller ${widget.surveyQuestionAnswerChoice.label} makeselectedquestion ${widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired}");
-        widget.streamController.add(
+      if (makeSelectedQuestionRequired != null &&
+          !widget.streamControllerMakeQuestionRequired.isClosed) {
+        widget.streamControllerMakeQuestionRequired.add(
           StreamControllerBeanChoice(
               choiceId: widget.surveyQuestionAnswerChoice.id,
-              makeSelectedQuestionRequired:
-              widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired,
-              value: selected,surveyQuestionId: widget.surveyQuestion.id),
+              makeSelectedQuestionRequired: widget
+                  .surveyQuestionAnswerChoice.makeSelectedQuestionRequired,
+              value: selected,
+              surveyQuestionId: widget.surveyQuestion.id),
+        );
+      }
+
+      //required question by group
+      int makeSelectedQuestionByGroupRequired =
+          widget.surveyQuestionAnswerChoice.makeSelectedGroupRequired;
+      if (makeSelectedQuestionByGroupRequired != null &&
+          !widget.streamControllerMakeQuestionByGroupRequired.isClosed) {
+        widget.streamControllerMakeQuestionByGroupRequired.add(
+          StreamControllerBeanChoice(
+              choiceId: widget.surveyQuestionAnswerChoice.id,
+              makeSelectedQuestionByGroupRequired: makeSelectedQuestionByGroupRequired,
+              value: selected,
+              surveyQuestionId: widget.surveyQuestion.id),
         );
       }
     }
-
   }
 
   void _onChange(bool value) async {
@@ -125,16 +146,33 @@ class ChoiceCheckboxListTileState extends State<ChoiceCheckboxListTile> {
         widget.surveyQuestionAnswerChoice.id,
         value,
         widget.surveyQuestion.multipleSelection);
-    widget.streamController.add(
+
+    //required question
+    widget.streamControllerMakeQuestionRequired.add(
       StreamControllerBeanChoice(
           choiceId: widget.surveyQuestionAnswerChoice.id,
           makeSelectedQuestionRequired:
               widget.surveyQuestionAnswerChoice.makeSelectedQuestionRequired,
-          value: value,surveyQuestionId: widget.surveyQuestion.id),
+          value: value,
+          surveyQuestionId: widget.surveyQuestion.id),
     );
+
+    //required question by group
+    int makeSelectedQuestionByGroupRequired =
+        widget.surveyQuestionAnswerChoice.makeSelectedGroupRequired;
+    if (makeSelectedQuestionByGroupRequired != null &&
+        !widget.streamControllerMakeQuestionByGroupRequired.isClosed) {
+      widget.streamControllerMakeQuestionByGroupRequired.add(
+        StreamControllerBeanChoice(
+            choiceId: widget.surveyQuestionAnswerChoice.id,
+            makeSelectedQuestionByGroupRequired: makeSelectedQuestionByGroupRequired,
+            value: value,
+            surveyQuestionId: widget.surveyQuestion.id),
+      );
+    }
+
     if (this.mounted) {
-//      debugPrint("isOther ${widget.surveyQuestionAnswerChoice.isOther}");
-      if(widget.surveyQuestionAnswerChoice.isOther){
+      if (widget.surveyQuestionAnswerChoice.isOther) {
         isOtherFieldVisible = value;
       }
       setState(() {

@@ -30,7 +30,6 @@ class FormCardTileState extends State<FormCardTile> {
   @override
   Widget build(BuildContext context) {
     updateState() {
-      debugPrint("calling update state");
       setState(() {
         uploaded = !uploaded;
       });

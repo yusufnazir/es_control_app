@@ -67,7 +67,6 @@ class SurveyPageState extends State<SurveyPage> {
   @override
   void initState() {
     super.initState();
-    debugPrint("running init state");
     _progressHUD = new ProgressHUD(
       loading: _loading,
       backgroundColor: Colors.black12,
@@ -82,7 +81,6 @@ class SurveyPageState extends State<SurveyPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("running build");
 //    var surveyCard = Card(
 //      child: Column(
 //        mainAxisSize: MainAxisSize.min,
@@ -167,7 +165,6 @@ class SurveyPageState extends State<SurveyPage> {
   }
 
   createFormListTile(SurveyResponse surveyResponse, int position) {
-    debugPrint("creating card $surveyResponse");
     return FormCardTile(
       prepareForUpload: (Function callback) async {
         await surveyFormSelectedForValidation(

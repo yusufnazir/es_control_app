@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
@@ -37,8 +38,10 @@ class RestApi {
           await manageSurvey(survey);
 
           List<SurveySection> surveySections = surveyPojo.surveySections;
-//          debugPrint("surveySections $surveySections");
           await manageSurveySections(surveySections);
+
+          List<SurveyGroup> surveyGroups = surveyPojo.surveyGroups;
+          await manageSurveyGroups(surveyGroups);
 
           List<SurveyQuestion> surveyQuestions = surveyPojo.surveyQuestions;
           await manageSurveyQuestions(surveyQuestions);
@@ -114,6 +117,20 @@ class RestApi {
     }
   }
 
+  manageSurveyGroups(List<SurveyGroup> surveyGroups) async {
+    if (surveyGroups != null) {
+      for (SurveyGroup surveyGroup in surveyGroups) {
+        SurveyGroup existingSurveyGroup =
+        await DBProvider.db.getSurveyGroup(surveyGroup.id);
+        if (existingSurveyGroup == null) {
+          await DBProvider.db.createSurveyGroup(surveyGroup);
+        } else {
+          await DBProvider.db.updateSurveyGroup(surveyGroup);
+        }
+      }
+    }
+  }
+
   manageSurveyQuestions(List<SurveyQuestion> surveyQuestions) async {
     if (surveyQuestions != null) {
       for (SurveyQuestion surveyQuestion in surveyQuestions) {
@@ -137,11 +154,9 @@ class RestApi {
             await DBProvider.db
                 .getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
         if (existingSurveyQuestionAnswerChoice == null) {
-          debugPrint("surveyQuestionAnswerChoice $surveyQuestionAnswerChoice");
           await DBProvider.db
               .createSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
           SurveyQuestionAnswerChoice questionAnswerChoice = await DBProvider.db.getSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice.id);
-          debugPrint("surveyQuestionAnswerChoice $questionAnswerChoice");
         } else {
           await DBProvider.db
               .updateSurveyQuestionAnswerChoice(surveyQuestionAnswerChoice);
@@ -189,7 +204,6 @@ class RestApi {
             "Content-Type": "application/json"
           },
           encoding: Encoding.getByName("utf-8"));
-      debugPrint("response statuscode ${response.statusCode}");
       return response.statusCode;
     }catch(e){
       return HttpStatus.networkConnectTimeoutError;

@@ -5,7 +5,17 @@ import 'package:es_control_app/util/utilities.dart';
 class SurveyQuestion {
   static final String tableSurveyQuestions = "SurveyQuestions";
   static final String columnId = "id";
+  static final String columnActive = "active";
   static final String columnSurveyId = "survey_id";
+  static final String columnQuestion = "question";
+  static final String columnQuestionDescription = "question_description";
+  static final String columnOrder = "order_";
+  static final String columnQuestionType = "question_type";
+  static final String columnRequired = "required";
+  static final String columnRequiredError = "required_error";
+  static final String columnMultipleSelection = "multiple_selection";
+  static final String columnSectionId = "section_id";
+  static final String columnGroupId = "group_id";
 
   int id;
   bool active;
@@ -18,6 +28,7 @@ class SurveyQuestion {
   String requiredError;
   bool multipleSelection;
   int sectionId;
+  int groupId;
 
   SurveyQuestion(
       {this.id,
@@ -30,7 +41,8 @@ class SurveyQuestion {
       this.required,
       this.requiredError,
       this.multipleSelection,
-      this.sectionId});
+      this.sectionId,
+      this.groupId});
 
   SurveyQuestion clientFromJson(String str) {
     final jsonData = json.decode(str);
@@ -42,8 +54,9 @@ class SurveyQuestion {
     return json.encode(dyn);
   }
 
-  factory SurveyQuestion.fromJsonMap(Map<String, dynamic> json) =>
-      new SurveyQuestion(
+  factory SurveyQuestion.fromJsonMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyQuestion(
         id: json["id"],
         active: json["active"] == true,
         surveyId: Utilities.getSurveyIdFromJson(json["survey"]),
@@ -54,36 +67,46 @@ class SurveyQuestion {
         required: json["required"] == true,
         requiredError: json["requiredError"],
         multipleSelection: json["multipleSelection"] == true,
-        sectionId: Utilities.getSurveyIdFromJson(json["surveySection"]),
+        sectionId: Utilities.getSectionIdFromJson(json["surveySection"]),
+        groupId: Utilities.getGroupIdFromJson(json["surveyGroup"]),
       );
+    }
+    return null;
+  }
 
-  factory SurveyQuestion.fromDbMap(Map<String, dynamic> json) =>
-      new SurveyQuestion(
+  factory SurveyQuestion.fromDbMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyQuestion(
         id: json[columnId],
-        active: json["active"] == 1,
+        active: json[columnActive] == 1,
         surveyId: json[columnSurveyId],
-        question: json["question"],
-        questionDescription: json["question_description"],
-        order: json["order_"],
-        questionType: json["question_type"],
-        required: json["required"] == 1,
-        requiredError: json["required_error"],
-        multipleSelection: json["multiple_selection"] == 1,
-        sectionId: json["section_id"],
+        question: json[columnQuestion],
+        questionDescription: json[columnQuestionDescription],
+        order: json[columnOrder],
+        questionType: json[columnQuestionType],
+        required: json[columnRequired] == 1,
+        requiredError: json[columnRequiredError],
+        multipleSelection: json[columnMultipleSelection] == 1,
+        sectionId: json[columnSectionId],
+        groupId: json[columnGroupId],
       );
+    }
+    return null;
+  }
 
   Map<String, dynamic> toDbMap() => {
         columnId: id,
-        "active": active,
+        columnActive: active,
         columnSurveyId: surveyId,
-        "question": question,
-        "question_description": questionDescription,
-        "order_": order,
-        "question_type": questionType,
-        "required": required,
-        "required_error": requiredError,
-        "multiple_selection": multipleSelection,
-        "section_id": sectionId,
+        columnQuestion: question,
+        columnQuestionDescription: questionDescription,
+        columnOrder: order,
+        columnQuestionType: questionType,
+        columnRequired: required,
+        columnRequiredError: requiredError,
+        columnMultipleSelection: multipleSelection,
+        columnSectionId: sectionId,
+        columnGroupId: groupId,
       };
 
   @override
@@ -101,7 +124,8 @@ class SurveyQuestion {
           required == other.required &&
           requiredError == other.requiredError &&
           multipleSelection == other.multipleSelection &&
-          sectionId == other.sectionId;
+          sectionId == other.sectionId &&
+          groupId == other.groupId;
 
   @override
   int get hashCode =>
@@ -115,10 +139,11 @@ class SurveyQuestion {
       required.hashCode ^
       requiredError.hashCode ^
       multipleSelection.hashCode ^
-      sectionId.hashCode;
+      sectionId.hashCode ^
+      groupId.hashCode;
 
   @override
   String toString() {
-    return 'SurveyQuestion{id: $id, active: $active, surveyId: $surveyId, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection, sectionId: $sectionId}';
+    return 'SurveyQuestion{id: $id, active: $active, surveyId: $surveyId, question: $question, questionDescription: $questionDescription, order: $order, questionType: $questionType, required: $required, requiredError: $requiredError, multipleSelection: $multipleSelection, sectionId: $sectionId, groupId: $groupId}';
   }
 }

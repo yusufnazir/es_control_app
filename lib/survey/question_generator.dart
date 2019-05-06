@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
-import 'package:es_control_app/model/survey_response_section_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
+import 'package:es_control_app/model/survey_response_section_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
 import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
 import 'package:es_control_app/survey/question_widget.dart';
@@ -29,7 +29,10 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   bool sectionSelected;
   bool uploaded;
 
-  StreamController<StreamControllerBeanChoice> streamController =
+  StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionRequired = new StreamController.broadcast();
+  StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionByGroupRequired =
       new StreamController.broadcast();
 
   @override
@@ -43,7 +46,8 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
 
   @override
   void dispose() {
-    streamController.close();
+    streamControllerMakeQuestionRequired.close();
+    streamControllerMakeQuestionByGroupRequired.close();
     super.dispose();
   }
 
@@ -54,7 +58,6 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     if (surveyResponseSection != null) {
       if (this.mounted) {
         setState(() {
-//          debugPrint("getSurveySectionApplicability");
           sectionSelected = surveyResponseSection.applicable;
         });
       }
@@ -73,8 +76,14 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
               absorbing: sectionSelected,
               child: Column(
                 children: widget.surveyQuestions
-                    .map((item) => new QuestionWidget(widget.surveyResponse,
-                        item, streamController, widget.requiredQuestionId))
+                    .map((item) => new QuestionWidget(
+                        surveyResponse: widget.surveyResponse,
+                        surveyQuestion: item,
+                        streamControllerMakeQuestionRequired:
+                            streamControllerMakeQuestionRequired,
+                        streamControllerMakeQuestionByGroupRequired:
+                            streamControllerMakeQuestionByGroupRequired,
+                        requiredQuestionId: widget.requiredQuestionId))
                     .toList(),
               ),
             ),
@@ -148,16 +157,21 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   _onSectionHeaderSelected(bool value) async {
     await DBProvider.db.updateSurveyResponseSection(
         widget.surveyResponse.uniqueId, widget.surveySection.id, value);
-    setState(() {
-      sectionSelected = value;
-    });
+    FocusScope.of(context).requestFocus(FocusNode());
+    if(this.mounted) {
+      setState(() {
+        sectionSelected = value;
+      });
+    }
   }
 
   void getSurveyResponseUploaded() async {
     SurveyResponse surveyResponse = await DBProvider.db
         .getSurveyResponseByUniqueId(widget.surveyResponse.uniqueId);
-    setState(() {
-      uploaded = surveyResponse.uploaded;
-    });
+    if(this.mounted) {
+      setState(() {
+        uploaded = surveyResponse.uploaded;
+      });
+    }
   }
 }

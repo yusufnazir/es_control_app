@@ -12,11 +12,18 @@ import 'package:flutter/material.dart';
 class QuestionTypeSingle extends StatefulWidget {
   final SurveyQuestion surveyQuestion;
   final SurveyResponse surveyResponse;
-  final StreamController<StreamControllerBeanChoice> streamController;
+  final StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionRequired;
+  final StreamController<StreamControllerBeanChoice>
+      streamControllerMakeQuestionByGroupRequired;
   final int requiredQuestionId;
 
   QuestionTypeSingle(
-      this.surveyResponse, this.surveyQuestion, this.streamController, this.requiredQuestionId);
+      {this.surveyResponse,
+      this.surveyQuestion,
+      this.streamControllerMakeQuestionRequired,
+      this.streamControllerMakeQuestionByGroupRequired,
+      this.requiredQuestionId});
 
   @override
   State<StatefulWidget> createState() {
@@ -35,17 +42,17 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
   @override
   void initState() {
     super.initState();
-    widget.streamController.stream.listen(
+    widget.streamControllerMakeQuestionRequired.stream.listen(
       (data) {
         if (data.makeSelectedQuestionRequired == null) {
-          if(this.mounted) {
+          if (this.mounted) {
             setState(() {
               visible = false;
             });
           }
         } else if (data.makeSelectedQuestionRequired ==
             widget.surveyQuestion.id) {
-          if(this.mounted) {
+          if (this.mounted) {
             setState(() {
               visible = data.value;
             });
@@ -53,6 +60,27 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
         }
       },
     );
+
+    widget.streamControllerMakeQuestionByGroupRequired.stream.listen(
+      (data) {
+        if (data.makeSelectedQuestionByGroupRequired == null) {
+          if (this.mounted) {
+            setState(() {
+              visible = false;
+            });
+          }
+        } else if (widget.surveyQuestion.groupId != null &&
+            data.makeSelectedQuestionByGroupRequired ==
+                widget.surveyQuestion.groupId) {
+          if (this.mounted) {
+            setState(() {
+              visible = data.value;
+            });
+          }
+        }
+      },
+    );
+
     focusNode.addListener(() {
       if (focusNode.hasFocus) {
         focussed = true;
@@ -90,6 +118,9 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
       }
       bool isDependant = await DBProvider.db
           .isSurveyQuestionDependant(widget.surveyQuestion.id);
+      if(widget.surveyQuestion.groupId!=null){
+        isDependant = true;
+      }
       return isDependant;
     }
 
@@ -107,7 +138,8 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
                   child: Card(
                     child: Column(
                       children: <Widget>[
-                        CardHeader(widget.surveyQuestion, false,widget.requiredQuestionId),
+                        CardHeader(widget.surveyQuestion, false,
+                            widget.requiredQuestionId),
                         Padding(
                           padding: EdgeInsets.all(8.0),
                           child: TextField(

@@ -219,7 +219,6 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   }
 
   void validateResponseAnswers(BuildContext context) async {
-    debugPrint("surveyQuestionRequired ${widget.surveyQuestionRequired}");
     FocusScope.of(context).requestFocus(new FocusNode());
 
 //    SurveyQuestion surveyQuestion;

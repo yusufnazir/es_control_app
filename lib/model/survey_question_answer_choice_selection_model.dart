@@ -31,22 +31,30 @@ class SurveyQuestionAnswerChoiceSelection {
   }
 
   factory SurveyQuestionAnswerChoiceSelection.fromJsonMap(
-          Map<String, dynamic> json) =>
-      new SurveyQuestionAnswerChoiceSelection(
+      Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyQuestionAnswerChoiceSelection(
         id: json["id"],
         surveyQuestionAnswerChoiceId:
-            Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
-                json["surveyQuestionAnswerChoice"]),
+        Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
+            json["surveyQuestionAnswerChoice"]),
         label: json["label"],
       );
+    }
+    return null;
+  }
 
   factory SurveyQuestionAnswerChoiceSelection.fromDbMap(
-          Map<String, dynamic> json) =>
-      new SurveyQuestionAnswerChoiceSelection(
+          Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyQuestionAnswerChoiceSelection(
         id: json[columnId],
         surveyQuestionAnswerChoiceId: json[columnSurveyQuestionAnswerChoiceId],
         label: json[columnLabel],
       );
+    }
+    return null;
+  }
 
   Map<String, dynamic> toDbMap() => {
         columnId: id,

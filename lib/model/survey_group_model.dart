@@ -2,63 +2,59 @@ import 'dart:convert';
 
 import 'package:es_control_app/util/utilities.dart';
 
-class SurveySection {
-  static final String tableSurveySections = "SurveySections";
+class SurveyGroup {
+  static final String tableSurveyGroups = "SurveyGroups";
   static final String columnId = "id";
   static final String columnName = "name";
   static final String columnDescription = "description";
   static final String columnSurveyId = "survey_id";
   static final String columnActive = "active";
-  static final String columnEnableApplicability = "enable_applicability";
 
   int id;
   String name;
   String description;
   int surveyId;
   bool active;
-  bool enableApplicability;
 
-  SurveySection(
-      {this.id,
-      this.name,
-      this.description,
-      this.surveyId,
-      this.active,
-      this.enableApplicability});
+  SurveyGroup({
+    this.id,
+    this.name,
+    this.description,
+    this.surveyId,
+    this.active,
+  });
 
-  SurveySection clientFromJson(String str) {
+  SurveyGroup clientFromJson(String str) {
     final jsonData = json.decode(str);
-    return SurveySection.fromJsonMap(jsonData);
+    return SurveyGroup.fromJsonMap(jsonData);
   }
 
-  String clientToJson(SurveySection data) {
+  String clientToJson(SurveyGroup data) {
     final dyn = data.toDbMap();
     return json.encode(dyn);
   }
 
-  factory SurveySection.fromJsonMap(Map<String, dynamic> json) {
-    if (json != null) {
-      return SurveySection(
+  factory SurveyGroup.fromJsonMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyGroup(
         id: json["id"],
         name: json["name"],
         description: json["description"],
         surveyId: Utilities.getSurveyIdFromJson(json["survey"]),
         active: json["active"] == true,
-        enableApplicability: json["enableApplicability"] == true,
       );
     }
     return null;
   }
 
-  factory SurveySection.fromDbMap(Map<String, dynamic> json) {
-    if (json != null) {
-      return SurveySection(
+  factory SurveyGroup.fromDbMap(Map<String, dynamic> json) {
+    if(json!=null) {
+      return SurveyGroup(
         id: json[columnId],
         name: json[columnName],
         description: json[columnDescription],
         surveyId: json[columnSurveyId],
         active: json[columnActive] == 1,
-        enableApplicability: json[columnEnableApplicability] == 1,
       );
     }
     return null;
@@ -70,20 +66,18 @@ class SurveySection {
         columnDescription: description,
         columnSurveyId: surveyId,
         columnActive: active,
-        columnEnableApplicability: enableApplicability,
       };
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SurveySection &&
+      other is SurveyGroup &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&
           description == other.description &&
           surveyId == other.surveyId &&
-          active == other.active &&
-          enableApplicability == other.enableApplicability;
+          active == other.active;
 
   @override
   int get hashCode =>
@@ -91,11 +85,10 @@ class SurveySection {
       name.hashCode ^
       description.hashCode ^
       surveyId.hashCode ^
-      active.hashCode ^
-      enableApplicability.hashCode;
+      active.hashCode;
 
   @override
   String toString() {
-    return 'SurveySection{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active, enableApplicability: $enableApplicability}';
+    return 'SurveyGroup{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active}';
   }
 }

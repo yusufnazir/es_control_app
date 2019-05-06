@@ -1,4 +1,5 @@
 import 'package:es_control_app/constants.dart';
+import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
@@ -7,6 +8,7 @@ import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 
 class Utilities {
   static DateTime getDateTimeFromJson(String dateTime) {
@@ -30,6 +32,14 @@ class Utilities {
       return null;
     }
     return surveySection.id;
+  }
+
+  static int getGroupIdFromJson(Map<String, dynamic> json) {
+    SurveyGroup surveyGroup = SurveyGroup.fromJsonMap(json);
+    if (surveyGroup == null) {
+      return null;
+    }
+    return surveyGroup.id;
   }
 
   static int getSurveyQuestionIdFromJson(Map<String, dynamic> json) {

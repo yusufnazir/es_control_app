@@ -24,6 +24,8 @@ class SurveyQuestionAnswerChoice {
   static final String columnIsOther = "is_other";
   static final String columnMakeSelectedQuestionRequired =
       "make_selected_question_required";
+  static final String columnMakeSelectedGroupRequired =
+      "make_selected_group_required";
 
   int id;
   int surveyQuestionId;
@@ -43,6 +45,7 @@ class SurveyQuestionAnswerChoice {
   bool multipleSelection;
   bool isOther;
   int makeSelectedQuestionRequired;
+  int makeSelectedGroupRequired;
 
   SurveyQuestionAnswerChoice({
     this.id,
@@ -63,6 +66,7 @@ class SurveyQuestionAnswerChoice {
     this.multipleSelection,
     this.isOther,
     this.makeSelectedQuestionRequired,
+    this.makeSelectedGroupRequired,
   });
 
   SurveyQuestionAnswerChoice clientFromJson(String str) {
@@ -75,8 +79,9 @@ class SurveyQuestionAnswerChoice {
     return json.encode(dyn);
   }
 
-  factory SurveyQuestionAnswerChoice.fromJsonMap(Map<String, dynamic> json) =>
-      new SurveyQuestionAnswerChoice(
+  factory SurveyQuestionAnswerChoice.fromJsonMap(Map<String, dynamic> json) {
+    if (json != null) {
+      return SurveyQuestionAnswerChoice(
         id: json["id"],
         surveyQuestionId:
             Utilities.getSurveyQuestionIdFromJson(json["surveyQuestion"]),
@@ -96,10 +101,15 @@ class SurveyQuestionAnswerChoice {
         multipleSelection: json["multipleSelection"] == true,
         isOther: json["isOther"] == true,
         makeSelectedQuestionRequired: json["makeSelectedQuestionRequired"],
+        makeSelectedGroupRequired: json["makeSelectedGroupRequired"],
       );
+    }
+    return null;
+  }
 
-  factory SurveyQuestionAnswerChoice.fromDbMap(Map<String, dynamic> json) =>
-      new SurveyQuestionAnswerChoice(
+  factory SurveyQuestionAnswerChoice.fromDbMap(Map<String, dynamic> json) {
+    if (json != null) {
+      return SurveyQuestionAnswerChoice(
         id: json[columnId],
         surveyQuestionId: json[columnSurveyQuestionId],
         label: json[columnLabel],
@@ -118,7 +128,11 @@ class SurveyQuestionAnswerChoice {
         multipleSelection: json[columnMultipleSelection] == 1,
         isOther: json[columnIsOther] == 1,
         makeSelectedQuestionRequired: json[columnMakeSelectedQuestionRequired],
+        makeSelectedGroupRequired: json[columnMakeSelectedGroupRequired],
       );
+    }
+    return null;
+  }
 
   Map<String, dynamic> toDbMap() => {
         columnId: id,
@@ -139,12 +153,8 @@ class SurveyQuestionAnswerChoice {
         columnMultipleSelection: multipleSelection,
         columnIsOther: isOther,
         columnMakeSelectedQuestionRequired: makeSelectedQuestionRequired,
+        columnMakeSelectedGroupRequired: makeSelectedGroupRequired,
       };
-
-  @override
-  String toString() {
-    return 'SurveyQuestionAnswerChoice{id: $id, surveyQuestionId: $surveyQuestionId, label: $label, questionType: $questionType, axis: $axis, matrixColumnType: $matrixColumnType, index: $index, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue, minDate: $minDate, maxDate: $maxDate, validate: $validate, validationError: $validationError, multipleSelection: $multipleSelection, isOther: $isOther, makeSelectedQuestionRequired: $makeSelectedQuestionRequired}';
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -168,7 +178,8 @@ class SurveyQuestionAnswerChoice {
           validationError == other.validationError &&
           multipleSelection == other.multipleSelection &&
           isOther == other.isOther &&
-          makeSelectedQuestionRequired == other.makeSelectedQuestionRequired;
+          makeSelectedQuestionRequired == other.makeSelectedQuestionRequired &&
+          makeSelectedGroupRequired == other.makeSelectedGroupRequired;
 
   @override
   int get hashCode =>
@@ -189,5 +200,11 @@ class SurveyQuestionAnswerChoice {
       validationError.hashCode ^
       multipleSelection.hashCode ^
       isOther.hashCode ^
-      makeSelectedQuestionRequired.hashCode;
+      makeSelectedQuestionRequired.hashCode ^
+      makeSelectedGroupRequired.hashCode;
+
+  @override
+  String toString() {
+    return 'SurveyQuestionAnswerChoice{id: $id, surveyQuestionId: $surveyQuestionId, label: $label, questionType: $questionType, axis: $axis, matrixColumnType: $matrixColumnType, index: $index, minLength: $minLength, maxLength: $maxLength, minValue: $minValue, maxValue: $maxValue, minDate: $minDate, maxDate: $maxDate, validate: $validate, validationError: $validationError, multipleSelection: $multipleSelection, isOther: $isOther, makeSelectedQuestionRequired: $makeSelectedQuestionRequired, makeSelectedGroupRequired: $makeSelectedGroupRequired}';
+  }
 }
