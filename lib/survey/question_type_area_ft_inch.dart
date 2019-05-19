@@ -44,8 +44,8 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
       TextEditingController();
   TextEditingController widthInchTextEditingController =
       TextEditingController();
-  FocusNode lenghtFeetFocusNode = FocusNode();
-  FocusNode lenghtInchFocusNode = FocusNode();
+  FocusNode lengthFeetFocusNode = FocusNode();
+  FocusNode lengthInchFocusNode = FocusNode();
   FocusNode widthFeetFocusNode = FocusNode();
   FocusNode widthInchFocusNode = FocusNode();
 
@@ -97,11 +97,11 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
       },
     );
 
-    lenghtFeetFocusNode.addListener(() {
-      if (lenghtFeetFocusNode.hasFocus) {
+    lengthFeetFocusNode.addListener(() {
+      if (lengthFeetFocusNode.hasFocus) {
         focussed = true;
       }
-      if (!lenghtFeetFocusNode.hasFocus && focussed) {
+      if (!lengthFeetFocusNode.hasFocus && focussed) {
         _updateText(
             lengthFeetTextEditingController.text,
             lengthInchTextEditingController.text,
@@ -110,11 +110,11 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
       }
     });
 
-    lenghtInchFocusNode.addListener(() {
-      if (lenghtInchFocusNode.hasFocus) {
+    lengthInchFocusNode.addListener(() {
+      if (lengthInchFocusNode.hasFocus) {
         focussed = true;
       }
-      if (!lenghtInchFocusNode.hasFocus && focussed) {
+      if (!lengthInchFocusNode.hasFocus && focussed) {
         _updateText(
             lengthFeetTextEditingController.text,
             lengthInchTextEditingController.text,
@@ -153,8 +153,11 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
   @override
   void dispose() {
     lengthFeetTextEditingController.dispose();
-    lenghtFeetFocusNode.dispose();
-    lenghtInchFocusNode.dispose();
+    lengthInchTextEditingController.dispose();
+    widthFeetTextEditingController.dispose();
+    widthInchTextEditingController.dispose();
+    lengthFeetFocusNode.dispose();
+    lengthInchFocusNode.dispose();
     widthFeetFocusNode.dispose();
     widthInchFocusNode.dispose();
     super.dispose();
@@ -219,7 +222,7 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
                                     width: _width,
                                     child: TextField(
                                       textAlign: TextAlign.end,
-                                      focusNode: lenghtFeetFocusNode,
+                                      focusNode: lengthFeetFocusNode,
                                       controller:
                                           lengthFeetTextEditingController,
                                       keyboardType: TextInputType.number,
@@ -236,7 +239,7 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
                                     width: _width,
                                     child: TextField(
                                       textAlign: TextAlign.end,
-                                      focusNode: lenghtInchFocusNode,
+                                      focusNode: lengthInchFocusNode,
                                       controller:
                                           lengthInchTextEditingController,
                                       keyboardType: TextInputType.number,
@@ -333,8 +336,9 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
           widget.surveyResponse.uniqueId,
           widget.surveyQuestion.id,
           decimalValue);
-    } else if (oldWidthFeetValue.compareTo(widthInch) != 0) {
-      oldWidthFeetValue = widthInch;
+    } else if (oldWidthInchValue.compareTo(widthInch) != 0) {
+      debugPrint("oldWidthInchValue $oldWidthInchValue widthInch $widthInch");
+      oldWidthInchValue = widthInch;
       DBProvider.db.updateSurveyResponseAnswerForSingleText(
           widget.surveyResponse.uniqueId,
           widget.surveyQuestion.id,

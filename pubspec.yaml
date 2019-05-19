@@ -32,6 +32,12 @@ dependencies:
   flushbar: ^1.4.0
   oauth2: ^1.2.3
   flutter_pagination_helper: ^1.0.1+2
+  flutter_launcher_icons: ^0.7.0
+
+flutter_icons:
+  ios: true
+  android: true
+  image_path: "icons/notepad.png"
 
 dev_dependencies:
   flutter_test:

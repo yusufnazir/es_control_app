@@ -7,17 +7,17 @@ import 'package:es_control_app/model/survey_question_answer_choice_selection_mod
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 
-SurveyPojo clientFromJson(String str) {
+SurveyRestModel clientFromJson(String str) {
   final jsonData = json.decode(str);
-  return SurveyPojo.fromMap(jsonData);
+  return SurveyRestModel.fromMap(jsonData);
 }
 
-String clientToJson(SurveyPojo data) {
+String clientToJson(SurveyRestModel data) {
   final dyn = data.toMap();
   return json.encode(dyn);
 }
 
-class SurveyPojo {
+class SurveyRestModel {
   Survey survey;
   List<SurveySection> surveySections;
   List<SurveyGroup> surveyGroups;
@@ -26,7 +26,7 @@ class SurveyPojo {
   List<SurveyQuestionAnswerChoiceSelection>
       surveyQuestionAnswerChoiceSelections;
 
-  SurveyPojo({
+  SurveyRestModel({
     this.survey,
     this.surveySections,
     this.surveyGroups,
@@ -35,7 +35,7 @@ class SurveyPojo {
     this.surveyQuestionAnswerChoiceSelections,
   });
 
-  factory SurveyPojo.fromMap(Map<String, dynamic> json) => new SurveyPojo(
+  factory SurveyRestModel.fromMap(Map<String, dynamic> json) => new SurveyRestModel(
         survey: Survey.fromJsonMap(json["survey"]),
         surveySections: json["surveySections"]
             .map<SurveySection>((value) => SurveySection.fromJsonMap(value))

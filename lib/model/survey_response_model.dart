@@ -41,16 +41,15 @@ class SurveyResponse {
   }
 
   static String clientToJson(SurveyResponse data) {
-    final dyn = data.toMap();
-    return json.encode(dyn);
+    return json.encode(data);
   }
 
   factory SurveyResponse.fromJsonMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyResponse(
         id: json["id"],
         uniqueId: json["uniqueId"],
-        surveyId: Utilities.getSurveyIdFromJson(json["survey"]),
+        surveyId: json["surveyId"],
         formName: json["formName"],
         createdOn: Utilities.getDateTimeFromJson(json["createdOn"]),
         active: json["active"] == true,
@@ -62,7 +61,7 @@ class SurveyResponse {
   }
 
   factory SurveyResponse.fromDbMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyResponse(
         id: json[columnId],
         uniqueId: json[columnUniqueId],
@@ -88,22 +87,19 @@ class SurveyResponse {
         columnUsername: username,
       };
 
-  Map toMap() {
-    var map = new Map<String, dynamic>();
-    map["id"] = id;
-    map["uniqueId"] = uniqueId;
-    map["surveyId"] = surveyId;
-    map["formName"] = formName;
-    map["createdOn"] = DateFormat(Constants.dateFormatPrecise).format(createdOn);
-    map["active"] = active;
-    map["username"] = username;
-    map["uploaded"] = uploaded;
-    return map;
-  }
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "uniqueId": uniqueId,
+        "surveyId": surveyId,
+        "formName": formName,
+        "createdOn": DateFormat(Constants.dateFormatPrecise).format(createdOn),
+        "active": active,
+        "username": username,
+        "uploaded": uploaded,
+      };
 
   @override
   String toString() {
     return 'SurveyResponse{id: $id, uniqueId: $uniqueId, surveyId: $surveyId, formName: $formName, username: $username, createdOn: $createdOn, active: $active, uploaded: $uploaded}';
   }
-
 }

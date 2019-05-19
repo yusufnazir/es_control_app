@@ -4,9 +4,6 @@ import 'package:es_control_app/routes.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import 'package:oauth2/oauth2.dart';
-import 'package:progress_hud_v2/progress_hud.dart';
-import 'FormType.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,21 +11,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
-  TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
-
   final TextEditingController _usernameFilter = new TextEditingController();
   final TextEditingController _passwordFilter = new TextEditingController();
   String _username = "";
   String _password = "";
-  FormType _form = FormType
-      .login; // our default setting is to login, and we should switch to creating an account when the user chooses to
   int _state = 0;
-  Animation _animation;
   AnimationController _controller;
-  ProgressHUD _progressHUD;
   GlobalKey _globalKey = GlobalKey();
-  bool _loading = true;
-  double _width = double.maxFinite;
 
   _LoginPageState() {
     _usernameFilter.addListener(_emailListen);
@@ -37,13 +26,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _progressHUD = new ProgressHUD(
-      loading: _loading,
-      backgroundColor: Colors.black12,
-      color: Colors.white,
-      containerColor: Constants.primaryColorLighter,
-      borderRadius: 5.0,
-    );
     super.initState();
   }
 
@@ -69,43 +51,68 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
-  // Swap in between our two forms, registering and logging in
-  void _formChange() async {
-    setState(() {
-      if (_form == FormType.register) {
-        _form = FormType.login;
-      } else {
-        _form = FormType.register;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final appNameFld = Text(
+      "Elevator Survey",
+      style: TextStyle(
+        color: Constants.accentColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 40,
+      ),
+    );
+
     final emailField = TextField(
       controller: _usernameFilter,
       obscureText: false,
-      style: style,
+      style: TextStyle(
+          fontFamily: 'Montserrat', fontSize: 20.0, color: Colors.white),
       decoration: InputDecoration(
-          contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          hintText: "Username",
-          border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
+        prefixIcon: Icon(
+          Icons.person,
+          size: 40,
+          color: Colors.white,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 1.0),
+        ),
+        contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+        hintText: "Username",
+        hintStyle: TextStyle(color: Colors.white),
+        labelText: "Enter your username",
+        labelStyle: TextStyle(color: Colors.white),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+      ),
     );
     final passwordField = TextField(
-      controller: _passwordFilter,
-      obscureText: true,
-      style: style,
-      decoration: InputDecoration(
+        controller: _passwordFilter,
+        obscureText: true,
+        style: TextStyle(
+            fontFamily: 'Montserrat', fontSize: 20.0, color: Colors.white),
+        decoration: InputDecoration(
+          prefixIcon: Icon(
+            Icons.lock,
+            size: 40,
+            color: Colors.white,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white, width: 1.0),
+          ),
           contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
           hintText: "Password",
-          border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
-    );
+          hintStyle: TextStyle(color: Colors.white),
+          labelText: "Enter your password",
+          labelStyle: TextStyle(color: Colors.white),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+        ));
     final loginButton = Material(
       elevation: 5.0,
       borderRadius: BorderRadius.circular(30.0),
-      color: Constants.primaryColor,
+      color: Colors.white,
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
         padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
@@ -119,20 +126,38 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
 
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          ListView(
-            children: <Widget>[
-              Center(
-                child: Container(
-                  key: _globalKey,
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(36.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                stops: [
+              0.1,
+              0.5,
+              0.7,
+              0.9
+            ],
+                colors: [
+              // Colors are easy thanks to Flutter's Colors class.
+              Colors.green[800],
+              Colors.green[700],
+              Colors.green[600],
+              Colors.green[400],
+            ])),
+        child: Stack(
+          children: <Widget>[
+            ListView(
+              children: <Widget>[
+                Center(
+                  child: Container(
+                    key: _globalKey,
+//                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(36.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
 //                SizedBox(
 //                  height: 155.0,
 //                  child: Image.asset(
@@ -140,40 +165,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 //                    fit: BoxFit.contain,
 //                  ),
 //                ),
-                        SizedBox(height: 45.0),
-                        emailField,
-                        SizedBox(height: 25.0),
-                        passwordField,
-                        SizedBox(
-                          height: 35.0,
-                        ),
-                        loginButton,
-                        SizedBox(
-                          height: 15.0,
-                        ),
-                      ],
+                          SizedBox(height: 45.0),
+                          appNameFld,
+                          SizedBox(height: 90.0),
+                          emailField,
+                          SizedBox(height: 25.0),
+                          passwordField,
+                          SizedBox(
+                            height: 60.0,
+                          ),
+                          loginButton,
+                          SizedBox(
+                            height: 15.0,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              )
-            ],
-          )
-        ],
+                )
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
 
-  void _loginPressed() {
-//    getQuote();
-    getSurveysFromServer();
-//    _launchURL();
-//    Navigator.push(
-//      context,
-//      MaterialPageRoute(builder: (context) => Home()),
-//    );
-  }
-
-  getSurveysFromServer() async {
+  loginUser() async {
     // This URL is an endpoint that's provided by the authorization server. It's
 // usually included in the server's documentation of its OAuth2 API.
     final authorizationEndpoint = Uri.parse(Constants.tokenUri);
@@ -198,8 +216,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           identifier: Constants.client, secret: Constants.clientSecret);
       FileStorage.writeCredentials(client.credentials.toJson());
       FileStorage.writeUsername(_username);
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(Routes.surveys, (Route<dynamic> route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          Routes.surveys, (Route<dynamic> route) => false);
     } catch (e) {
       print(e.toString());
       setState(() {
@@ -234,27 +252,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 // us to re-use the credentials and avoid storing the username and password
 // directly.
 
-//      RestApi().getSurveysFromServerAndStoreInDB();
   }
 
   void animateButton() {
-    double initialWidth = _globalKey.currentContext.size.width;
-
     _controller =
         AnimationController(duration: Duration(milliseconds: 300), vsync: this);
-
-    _animation = Tween(begin: 0.0, end: 1).animate(_controller)
-      ..addListener(() {
-        setState(() {
-          _width = initialWidth - ((initialWidth - 48) * _animation.value);
-        });
-      });
     _controller.forward();
 
     setState(() {
       _state = 1;
     });
-    getSurveysFromServer();
+    FocusScope.of(context).requestFocus(new FocusNode());
+    loginUser();
   }
 
   setUpButtonChild() {
@@ -262,8 +271,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return Text(
         "Sign in",
         style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
+          color: Colors.green,
+          fontSize: 25,
         ),
       );
     } else if (_state == 1) {
@@ -272,11 +281,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         width: 36,
         child: CircularProgressIndicator(
           value: null,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
         ),
       );
     } else {
-      return Icon(Icons.check, color: Colors.white);
+      return Icon(Icons.check, color: Colors.green);
     }
   }
 }

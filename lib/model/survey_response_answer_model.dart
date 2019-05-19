@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyResponseAnswer {
   static final String tableSurveyResponseAnswers = "SurveyResponseAnswers";
 
@@ -17,7 +15,6 @@ class SurveyResponseAnswer {
       "survey_question_choice_column_id";
   static final String columnSurveyQuestionChoiceSelectionId =
       "survey_question_choice_selection_id";
-  static final String columnQuestionType = "question_type";
   static final String columnResponseText = "response_text";
   static final String columnOtherValue = "other_value";
   static final String columnSelected = "selected";
@@ -30,7 +27,6 @@ class SurveyResponseAnswer {
   int surveyQuestionAnswerChoiceRowId;
   int surveyQuestionAnswerChoiceColumnId;
   int surveyQuestionAnswerChoiceSelectionId;
-  String questionType;
   String matrixColumnType;
   String responseText;
   String otherValue;
@@ -45,7 +41,6 @@ class SurveyResponseAnswer {
     this.surveyQuestionAnswerChoiceRowId,
     this.surveyQuestionAnswerChoiceColumnId,
     this.surveyQuestionAnswerChoiceSelectionId,
-    this.questionType,
     this.responseText,
     this.otherValue,
     this.selected,
@@ -67,20 +62,14 @@ class SurveyResponseAnswer {
           id: json["id"],
           uniqueId: json["uniqueId"],
           active: json["active"] == true,
-          surveyResponseUniqueId: Utilities.getSurveyResponseUniqueIdFromJson(
-              json["surveyResponseUniqueId"]),
-          surveyQuestionId: Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
-              json["surveyQuestionId"]),
+          surveyResponseUniqueId: json["surveyResponseUniqueId"],
+          surveyQuestionId: json["surveyQuestionId"],
           surveyQuestionAnswerChoiceRowId:
-              Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
-                  json["surveyQuestionAnswerChoiceRowId"]),
+              json["surveyQuestionAnswerChoiceRowId"],
           surveyQuestionAnswerChoiceColumnId:
-              Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
-                  json["surveyQuestionAnswerChoiceColumnId"]),
+              json["surveyQuestionAnswerChoiceColumnId"],
           surveyQuestionAnswerChoiceSelectionId:
-              Utilities.getSurveyQuestionAnswerChoiceSelectionIdFromJson(
-                  json["surveyQuestionAnswerChoiceSelectionId"]),
-          questionType: json["questionType"],
+              json["surveyQuestionAnswerChoiceSelectionId"],
           responseText: json["responseText"],
           otherValue: json["otherValue"],
           selected: json["selected"] == true);
@@ -100,7 +89,6 @@ class SurveyResponseAnswer {
             json[columnSurveyQuestionChoiceColumnId],
         surveyQuestionAnswerChoiceSelectionId:
             json[columnSurveyQuestionChoiceSelectionId],
-        questionType: json[columnQuestionType],
         responseText: json[columnResponseText],
         otherValue: json[columnOtherValue],
         active: json[columnActive] == 1,
@@ -119,11 +107,27 @@ class SurveyResponseAnswer {
         columnSurveyQuestionChoiceColumnId: surveyQuestionAnswerChoiceColumnId,
         columnSurveyQuestionChoiceSelectionId:
             surveyQuestionAnswerChoiceSelectionId,
-        columnQuestionType: questionType,
         columnResponseText: responseText,
         columnOtherValue: otherValue,
         columnActive: active,
         columnSelected: selected
+      };
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'uniqueId': uniqueId,
+        'active': active,
+        'surveyResponseUniqueId': surveyResponseUniqueId,
+        'surveyQuestionId': surveyQuestionId,
+        'surveyQuestionAnswerChoiceRowId': surveyQuestionAnswerChoiceRowId,
+        'surveyQuestionAnswerChoiceColumnId':
+            surveyQuestionAnswerChoiceColumnId,
+        'surveyQuestionAnswerChoiceSelectionId':
+            surveyQuestionAnswerChoiceSelectionId,
+        'matrixColumnType': matrixColumnType,
+        'responseText': responseText,
+        'otherValue': otherValue,
+        'selected': selected,
       };
 
   @override
@@ -142,7 +146,6 @@ class SurveyResponseAnswer {
               other.surveyQuestionAnswerChoiceColumnId &&
           surveyQuestionAnswerChoiceSelectionId ==
               other.surveyQuestionAnswerChoiceSelectionId &&
-          questionType == other.questionType &&
           matrixColumnType == other.matrixColumnType &&
           responseText == other.responseText &&
           otherValue == other.otherValue &&
@@ -158,7 +161,6 @@ class SurveyResponseAnswer {
       surveyQuestionAnswerChoiceRowId.hashCode ^
       surveyQuestionAnswerChoiceColumnId.hashCode ^
       surveyQuestionAnswerChoiceSelectionId.hashCode ^
-      questionType.hashCode ^
       matrixColumnType.hashCode ^
       responseText.hashCode ^
       otherValue.hashCode ^
@@ -166,6 +168,6 @@ class SurveyResponseAnswer {
 
   @override
   String toString() {
-    return 'SurveyResponseAnswer{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveyQuestionId: $surveyQuestionId, surveyQuestionAnswerChoiceRowId: $surveyQuestionAnswerChoiceRowId, surveyQuestionAnswerChoiceColumnId: $surveyQuestionAnswerChoiceColumnId, surveyQuestionAnswerChoiceSelectionId: $surveyQuestionAnswerChoiceSelectionId, questionType: $questionType, matrixColumnType: $matrixColumnType, responseText: $responseText, otherValue: $otherValue, selected: $selected}';
+    return 'SurveyResponseAnswer{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveyQuestionId: $surveyQuestionId, surveyQuestionAnswerChoiceRowId: $surveyQuestionAnswerChoiceRowId, surveyQuestionAnswerChoiceColumnId: $surveyQuestionAnswerChoiceColumnId, surveyQuestionAnswerChoiceSelectionId: $surveyQuestionAnswerChoiceSelectionId, matrixColumnType: $matrixColumnType, responseText: $responseText, otherValue: $otherValue, selected: $selected}';
   }
 }

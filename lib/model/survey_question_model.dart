@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyQuestion {
   static final String tableSurveyQuestions = "SurveyQuestions";
   static final String columnId = "id";
@@ -59,7 +57,7 @@ class SurveyQuestion {
       return SurveyQuestion(
         id: json["id"],
         active: json["active"] == true,
-        surveyId: Utilities.getSurveyIdFromJson(json["survey"]),
+        surveyId: json["surveyId"],
         question: json["question"],
         questionDescription: json["questionDescription"],
         order: json["order"],
@@ -67,8 +65,8 @@ class SurveyQuestion {
         required: json["required"] == true,
         requiredError: json["requiredError"],
         multipleSelection: json["multipleSelection"] == true,
-        sectionId: Utilities.getSectionIdFromJson(json["surveySection"]),
-        groupId: Utilities.getGroupIdFromJson(json["surveyGroup"]),
+        sectionId: json["sectionId"],
+        groupId: json["groupId"],
       );
     }
     return null;

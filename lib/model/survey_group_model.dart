@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyGroup {
   static final String tableSurveyGroups = "SurveyGroups";
   static final String columnId = "id";
@@ -40,7 +38,7 @@ class SurveyGroup {
         id: json["id"],
         name: json["name"],
         description: json["description"],
-        surveyId: Utilities.getSurveyIdFromJson(json["survey"]),
+        surveyId: json["surveyId"],
         active: json["active"] == true,
       );
     }

@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
+import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/survey/question_generator.dart';
 import 'package:es_control_app/util/question_validator.dart';
 import 'package:flushbar/flushbar.dart';
@@ -9,7 +9,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:preload_page_view/preload_page_view.dart';
-import 'package:uuid/uuid.dart';
 
 import 'model/survey_question_model.dart';
 import 'model/survey_response_model.dart';
@@ -42,7 +41,6 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
 
   SurveyFormQuestionsPageState();
 
-  final _controller = new PageController();
   final _preLoadController = PreloadPageController();
   static const _kDuration = const Duration(milliseconds: 300);
   static const _kCurve = Curves.ease;
@@ -50,7 +48,7 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   @override
   void initState() {
     super.initState();
-    this.surveyQuestionRequired=widget.surveyQuestionRequired;
+    this.surveyQuestionRequired = widget.surveyQuestionRequired;
     getSurveyQuestions();
   }
 
@@ -99,10 +97,12 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
                 preloadPagesCount: 0,
                 itemCount: surveySections.length,
                 itemBuilder: (BuildContext context, int position) {
-                  SurveySection surveySection = surveySections[position];
+                  SurveySection surveySection =
+                      surveySections == null ? null : surveySections[position];
                   return QuestionGeneratorWidget(
                       widget.surveyResponse,
-                      questionsBySectionMap[surveySection.id],
+                      questionsBySectionMap[
+                          surveySection == null ? null : surveySection.id],
                       surveySections[position],
                       requiredQuestionId);
                 },
@@ -147,7 +147,8 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
     List<int> sectionIds = questionsBySectionMap.keys.toList();
 
     for (int sectionId in sectionIds) {
-      SurveySection surveySection = await DBProvider.db.getSurveySection(sectionId);
+      SurveySection surveySection =
+          await DBProvider.db.getSurveySection(sectionId);
       surveySections.add(surveySection);
     }
     setState(() {
@@ -236,8 +237,8 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
         requiredQuestionId = surveyQuestionRequired.id;
       });
       int sectionId = surveyQuestionRequired.sectionId;
-      SurveySection surveySection = surveySections
-          .firstWhere((SurveySection surveySection) => surveySection.id == sectionId);
+      SurveySection surveySection = surveySections.firstWhere(
+          (SurveySection surveySection) => surveySection.id == sectionId);
       int indexOf = surveySections.indexOf(surveySection);
       _preLoadController.jumpToPage(indexOf);
 
@@ -263,7 +264,8 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
       )..show(context);
       surveyQuestionRequired = null;
     } else {
-      Flushbar(duration: Duration(seconds: 3),
+      Flushbar(
+        duration: Duration(seconds: 3),
         flushbarPosition: FlushbarPosition.TOP,
         flushbarStyle: FlushbarStyle.FLOATING,
         isDismissible: true,
@@ -271,10 +273,7 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
         title: "Nothing to validate.",
         message: "All required questions have been filled.",
         backgroundGradient: LinearGradient(
-          colors: [
-            Constants.primaryColorLight,
-            Constants.primaryColor
-          ],
+          colors: [Constants.primaryColorLight, Constants.primaryColor],
         ),
         boxShadow: BoxShadow(
           color: Colors.green[800],

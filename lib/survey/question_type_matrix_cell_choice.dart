@@ -86,11 +86,10 @@ class MatrixCellChoiceState extends State<MatrixCellChoice> {
                       surveyQuestionAnswerChoiceSelection,
                       streamController));
             }
-            return Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: checkBoxes.values.toList(),
-              ),
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: checkBoxes.values.toList(),
             );
           } else {
             return Column(

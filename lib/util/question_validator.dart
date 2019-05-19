@@ -19,7 +19,7 @@ class QuestionValidator {
 
   validateQuestions() async {
     notApplicableSections = await DBProvider.db
-        .getAllApplicableGroupsForSurveyResponse(surveyResponseUniqueId);
+        .getAllApplicableSectionsForSurveyResponse(surveyResponseUniqueId);
     List<SurveyQuestion> allSurveyQuestions =
         await DBProvider.db.getAllSurveyQuestions(surveyId);
     for (SurveyQuestion surveyQuestion in allSurveyQuestions) {
@@ -54,6 +54,7 @@ class QuestionValidator {
         String questionType = surveyQuestion.questionType;
         switch (questionType) {
           case question_type_single:
+          case question_type_area_ft_inch:
             return await validateSingle(surveyQuestion);
           case question_type_choices:
             return await validateChoices(surveyQuestion);

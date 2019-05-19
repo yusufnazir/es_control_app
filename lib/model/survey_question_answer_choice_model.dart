@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyQuestionAnswerChoice {
   static final String tableSurveyQuestionAnswerChoices =
       "SurveyQuestionAnswerChoices";
@@ -83,8 +81,7 @@ class SurveyQuestionAnswerChoice {
     if (json != null) {
       return SurveyQuestionAnswerChoice(
         id: json["id"],
-        surveyQuestionId:
-            Utilities.getSurveyQuestionIdFromJson(json["surveyQuestion"]),
+        surveyQuestionId:json["surveyQuestionId"],
         label: json["label"],
         questionType: json["questionType"],
         axis: json["axis"],

@@ -56,7 +56,7 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
           Map columnWidths = Map<int, TableColumnWidth>();
           int i = 0;
           columns.forEach((p) {
-            if (p.matrixColumnType == single_composite_selection) {
+            if (p.matrixColumnType == single_composite_selection || p.matrixColumnType == multiple_composite_selection) {
 //              columnWidths[i] = FixedColumnWidth(400.0);
               columnWidths[i] = IntrinsicColumnWidth();
             } else {
@@ -146,6 +146,7 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
       SurveyQuestionAnswerChoice row, SurveyQuestionAnswerChoice column) {
     switch (column.matrixColumnType) {
       case single_composite_selection:
+      case multiple_composite_selection:
         return TableCell(
             child: Padding(
                 padding: EdgeInsets.all(8.0),

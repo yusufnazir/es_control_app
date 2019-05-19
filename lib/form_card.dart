@@ -1,6 +1,5 @@
 import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -19,20 +18,20 @@ class FormCardTile extends StatefulWidget {
 }
 
 class FormCardTileState extends State<FormCardTile> {
-  bool uploaded = false;
+//  bool uploaded = false;
 
   @override
   void initState() {
     super.initState();
-    uploaded = widget.surveyResponse.uploaded;
+//    uploaded = widget.surveyResponse.uploaded;
   }
 
   @override
   Widget build(BuildContext context) {
     updateState() {
-      setState(() {
-        uploaded = !uploaded;
-      });
+//      setState(() {
+//        uploaded = !uploaded;
+//      });
     }
 
     cloudClicked() async {
@@ -41,34 +40,35 @@ class FormCardTileState extends State<FormCardTile> {
 
     IconButton cloudBtn = IconButton(
         onPressed: () async {
-          if (!uploaded) {
+//          if (!uploaded) {
             await cloudClicked();
-          } else {
-            Flushbar(duration: Duration(seconds: 3),
-              flushbarPosition: FlushbarPosition.TOP,
-              flushbarStyle: FlushbarStyle.FLOATING,
-              isDismissible: true,
-              dismissDirection: FlushbarDismissDirection.HORIZONTAL,
-              title: "Already uploaded.",
-              message: "This form has already been uploaded.",
-              backgroundGradient: LinearGradient(
-                colors: [
-                  Constants.primaryColorLight,
-                  Constants.primaryColor
-                ],
-              ),
-              boxShadow: BoxShadow(
-                color: Colors.green[800],
-                offset: Offset(0.0, 2.0),
-                blurRadius: 3.0,
-              ),
-            )..show(context);
-          }
+//          } else {
+//            Flushbar(duration: Duration(seconds: 3),
+//              flushbarPosition: FlushbarPosition.TOP,
+//              flushbarStyle: FlushbarStyle.FLOATING,
+//              isDismissible: true,
+//              dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+//              title: "Already uploaded.",
+//              message: "This form has already been uploaded.",
+//              backgroundGradient: LinearGradient(
+//                colors: [
+//                  Constants.primaryColorLight,
+//                  Constants.primaryColor
+//                ],
+//              ),
+//              boxShadow: BoxShadow(
+//                color: Colors.green[800],
+//                offset: Offset(0.0, 2.0),
+//                blurRadius: 3.0,
+//              ),
+//            )..show(context);
+//          }
         },
         padding: EdgeInsets.all(0.0),
         color: Colors.white,
         icon: Icon(
-          uploaded ? Icons.cloud_done : Icons.cloud_upload,
+          Icons.cloud_upload,
+//          uploaded ? Icons.cloud_done : Icons.cloud_upload,
           color: Colors.white,
         ));
 

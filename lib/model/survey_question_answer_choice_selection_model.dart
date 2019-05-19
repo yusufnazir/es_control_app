@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyQuestionAnswerChoiceSelection {
   static final String tableSurveyQuestionAnswerChoiceSelections =
       "SurveyQuestionAnswerChoiceSelections";
@@ -32,12 +30,10 @@ class SurveyQuestionAnswerChoiceSelection {
 
   factory SurveyQuestionAnswerChoiceSelection.fromJsonMap(
       Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyQuestionAnswerChoiceSelection(
         id: json["id"],
-        surveyQuestionAnswerChoiceId:
-        Utilities.getSurveyQuestionAnswerChoiceIdFromJson(
-            json["surveyQuestionAnswerChoice"]),
+        surveyQuestionAnswerChoiceId: json["surveyQuestionAnswerChoiceId"],
         label: json["label"],
       );
     }
@@ -45,8 +41,8 @@ class SurveyQuestionAnswerChoiceSelection {
   }
 
   factory SurveyQuestionAnswerChoiceSelection.fromDbMap(
-          Map<String, dynamic> json) {
-    if(json!=null) {
+      Map<String, dynamic> json) {
+    if (json != null) {
       return SurveyQuestionAnswerChoiceSelection(
         id: json[columnId],
         surveyQuestionAnswerChoiceId: json[columnSurveyQuestionAnswerChoiceId],

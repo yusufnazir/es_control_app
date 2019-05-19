@@ -65,15 +65,21 @@ class ChoiceSelectionCheckboxState extends State<ChoiceSelectionCheckbox> {
 
           return Flexible(
               child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Checkbox(
+              Expanded(
+                  child: Checkbox(
                 checkColor: Constants.accentColor,
                 value: checked,
                 onChanged: (bool value) {
                   _doForOnChange(value);
                 },
-              ),
-              Text(widget.surveyQuestionAnswerChoiceSelection.label)
+              )),
+              Flexible(
+                child: Text(
+                  widget.surveyQuestionAnswerChoiceSelection.label,softWrap: false,
+                ),
+              )
             ],
           ));
 //          } else {

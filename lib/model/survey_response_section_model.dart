@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:es_control_app/util/utilities.dart';
-
 class SurveyResponseSection {
   static final String tableSurveyResponseSections = "SurveyResponseSections";
 
@@ -11,14 +9,14 @@ class SurveyResponseSection {
   static final String columnSurveyResponseUniqueId =
       "survey_response_unique_id";
   static final String columnSurveySectionId = "survey_section_id";
-  static final String columnApplicable = "applicable";
+  static final String columnNotApplicable = "notApplicable";
 
   int id;
   String uniqueId;
   bool active;
   String surveyResponseUniqueId;
   int surveySectionId;
-  bool applicable;
+  bool notApplicable;
 
   SurveyResponseSection({
     this.id,
@@ -26,7 +24,7 @@ class SurveyResponseSection {
     this.active,
     this.surveyResponseUniqueId,
     this.surveySectionId,
-    this.applicable,
+    this.notApplicable,
   });
 
   SurveyResponseSection clientFromJson(String str) {
@@ -35,34 +33,31 @@ class SurveyResponseSection {
   }
 
   String clientToJson(SurveyResponseSection data) {
-    final dyn = data.toDbMap();
-    return json.encode(dyn);
+    return json.encode(data);
   }
 
   factory SurveyResponseSection.fromJsonMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyResponseSection(
           id: json["id"],
           uniqueId: json["uniqueId"],
           active: json["active"] == true,
-          surveyResponseUniqueId: Utilities.getSurveyResponseUniqueIdFromJson(
-              json["surveyResponseUniqueId"]),
-          surveySectionId: Utilities.getSectionIdFromJson(
-              json["surveySectionId"]),
-          applicable: json["applicable"] == true);
+          surveyResponseUniqueId: json["surveyResponseUniqueId"],
+          surveySectionId: json["surveySectionId"],
+          notApplicable: json["notApplicable"] == true);
     }
     return null;
   }
 
   factory SurveyResponseSection.fromDbMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyResponseSection(
         id: json[columnId],
         uniqueId: json[columnUniqueId],
         surveyResponseUniqueId: json[columnSurveyResponseUniqueId],
         surveySectionId: json[columnSurveySectionId],
         active: json[columnActive] == 1,
-        applicable: json[columnApplicable] == 1,
+        notApplicable: json[columnNotApplicable] == 1,
       );
     }
     return null;
@@ -74,7 +69,16 @@ class SurveyResponseSection {
         columnSurveyResponseUniqueId: surveyResponseUniqueId,
         columnSurveySectionId: surveySectionId,
         columnActive: active,
-        columnApplicable: applicable
+        columnNotApplicable: notApplicable
+      };
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'uniqueId': uniqueId,
+        'active': active,
+        'surveyResponseUniqueId': surveyResponseUniqueId,
+        'surveySectionId': surveySectionId,
+        'notApplicable': notApplicable,
       };
 
   @override
@@ -87,7 +91,7 @@ class SurveyResponseSection {
           active == other.active &&
           surveyResponseUniqueId == other.surveyResponseUniqueId &&
           surveySectionId == other.surveySectionId &&
-          applicable == other.applicable;
+          notApplicable == other.notApplicable;
 
   @override
   int get hashCode =>
@@ -96,10 +100,10 @@ class SurveyResponseSection {
       active.hashCode ^
       surveyResponseUniqueId.hashCode ^
       surveySectionId.hashCode ^
-      applicable.hashCode;
+      notApplicable.hashCode;
 
   @override
   String toString() {
-    return 'SurveyResponseSection{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveySectionId: $surveySectionId, applicable: $applicable}';
+    return 'SurveyResponseSection{id: $id, uniqueId: $uniqueId, active: $active, surveyResponseUniqueId: $surveyResponseUniqueId, surveySectionId: $surveySectionId, notApplicable: $notApplicable}';
   }
 }

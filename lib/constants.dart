@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Constants{
-
+class Constants {
   static double borderRadius = 5.0;
 
   static Color primaryColor = const Color(0xFF33691e);
@@ -19,15 +18,22 @@ class Constants{
   static Color dark = const Color(0xFF3B4254);
   static Color accent = const Color(0xFF32C4E6);
 
-  static String host = "http://192.168.0.105:9300/escontrol/";
-  static String tokenUri = host + "oauth/token";
+  static String _debugHost = "https://software.cxode.com/escontrol/";
+  static String _releaseHost = "https://software.cxode.com/escontrol/";
+  static String tokenUri = getHost() + "oauth/token";
 
-  static String getAllSurveys = host + "rest/api/v1/surveys/";
-  static String getAllSurveyResponses = host + "rest/api/v1/surveyResponses/";
+  static String getAllSurveys = getHost() + "rest/api/v1/surveys/";
+  static String getAllSurveyResponses =
+      getHost() + "rest/api/v1/surveyResponses/";
+  static String uploadAllSurveys = getHost() + "rest/api/v1/surveyResponses/";
 
   static String dateFormat = "yyyy-MM-dd HH:mm";
   static String dateFormatPrecise = "yyyy-MM-dd HH:mm:ss";
 
   static String client = "escontrol";
   static String clientSecret = "escontrol";
+
+  static String getHost() {
+    return _releaseHost;
+  }
 }

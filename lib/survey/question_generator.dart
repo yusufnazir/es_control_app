@@ -27,7 +27,7 @@ class QuestionGeneratorWidget extends StatefulWidget {
 
 class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   bool sectionSelected;
-  bool uploaded;
+//  bool uploaded;
 
   StreamController<StreamControllerBeanChoice>
       streamControllerMakeQuestionRequired = new StreamController.broadcast();
@@ -38,10 +38,10 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   @override
   void initState() {
     super.initState();
-    uploaded = false;
+//    uploaded = false;
     sectionSelected = false;
     getSurveySectionApplicability();
-    getSurveyResponseUploaded();
+//    getSurveyResponseUploaded();
   }
 
   @override
@@ -58,7 +58,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     if (surveyResponseSection != null) {
       if (this.mounted) {
         setState(() {
-          sectionSelected = surveyResponseSection.applicable;
+          sectionSelected = surveyResponseSection.notApplicable;
         });
       }
     }
@@ -67,8 +67,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      body: AbsorbPointer(
-        child: ListView(
+      body: ListView(
           shrinkWrap: true,
           children: <Widget>[
             _showSectionNameLayout(),
@@ -88,9 +87,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
               ),
             ),
           ],
-        ),
-        absorbing: uploaded,
-      ), //      body: SizedBox(
+      ),
     );
   }
 
@@ -155,7 +152,7 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
   }
 
   _onSectionHeaderSelected(bool value) async {
-    await DBProvider.db.updateSurveyResponseSection(
+    await DBProvider.db.updateSurveyResponseSectionApplicability(
         widget.surveyResponse.uniqueId, widget.surveySection.id, value);
     FocusScope.of(context).requestFocus(FocusNode());
     if(this.mounted) {
@@ -165,13 +162,13 @@ class QuestionGeneratorWidgetState extends State<QuestionGeneratorWidget> {
     }
   }
 
-  void getSurveyResponseUploaded() async {
-    SurveyResponse surveyResponse = await DBProvider.db
-        .getSurveyResponseByUniqueId(widget.surveyResponse.uniqueId);
-    if(this.mounted) {
-      setState(() {
-        uploaded = surveyResponse.uploaded;
-      });
-    }
-  }
+//  void getSurveyResponseUploaded() async {
+//    SurveyResponse surveyResponse = await DBProvider.db
+//        .getSurveyResponseByUniqueId(widget.surveyResponse.uniqueId);
+//    if(this.mounted) {
+//      setState(() {
+//        uploaded = surveyResponse.uploaded;
+//      });
+//    }
+//  }
 }

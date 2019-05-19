@@ -4,6 +4,7 @@ import 'package:es_control_app/form_card.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
+import 'package:es_control_app/util/logout_user.dart';
 import 'package:es_control_app/util/question_validator.dart';
 import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flushbar/flushbar.dart';
@@ -271,6 +272,8 @@ class SurveyPageState extends State<SurveyPage> {
         await DBProvider.db
             .updateSurveyResponseUploaded(surveyResponse.uniqueId, true);
         callback();
+      } else if(responseCode==-2){
+        logoutUser(context);
       } else {
         Flushbar(
           duration: Duration(seconds: 8),

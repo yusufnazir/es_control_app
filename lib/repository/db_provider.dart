@@ -11,7 +11,6 @@ import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/model/survey_response_section_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/util/matrix_column_types.dart';
-import 'package:es_control_app/util/question_types.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -117,7 +116,7 @@ class DBProvider {
           "${SurveyResponseSection.columnActive} BIT,"
           "${SurveyResponseSection.columnSurveyResponseUniqueId} TEXT,"
           "${SurveyResponseSection.columnSurveySectionId} INTEGER,"
-          "${SurveyResponseSection.columnApplicable} BIT"
+          "${SurveyResponseSection.columnNotApplicable} BIT"
           ")");
       await db.execute(
           "CREATE TABLE ${SurveyResponseAnswer.tableSurveyResponseAnswers} ("
@@ -129,8 +128,8 @@ class DBProvider {
           "${SurveyResponseAnswer.columnSurveyQuestionChoiceRowId} INTEGER,"
           "${SurveyResponseAnswer.columnSurveyQuestionChoiceColumnId} INTEGER,"
           "${SurveyResponseAnswer.columnSurveyQuestionChoiceSelectionId} INTEGER,"
-          "${SurveyResponseAnswer.columnQuestionType} TEXT,"
           "${SurveyResponseAnswer.columnResponseText} TEXT,"
+          "${SurveyResponseAnswer.columnOtherValue} TEXT,"
           "${SurveyResponseAnswer.columnSelected} BIT"
           ")");
     });
@@ -202,7 +201,7 @@ class DBProvider {
   Future<SurveyResponse> updateSurveyResponseUploaded(
       String uniqueId, bool uploaded) async {
     final db = await database;
-    var res = await db.update(SurveyResponse.tableSurveyResponses,
+    await db.update(SurveyResponse.tableSurveyResponses,
         {SurveyResponse.columnUploaded: uploaded},
         where: "${SurveyResponse.columnUniqueId} = ? ", whereArgs: [uniqueId]);
 
@@ -228,10 +227,12 @@ class DBProvider {
     return list;
   }
 
-  Future<SurveyResponseAnswer> getSurveyResponseAnswer(int id) async {
+  Future<SurveyResponseAnswer> getSurveyResponseAnswerByUniqueId(
+      String uniqueId) async {
     final db = await database;
     var res = await db.query(SurveyResponseAnswer.tableSurveyResponseAnswers,
-        where: "${SurveyResponseAnswer.columnId} = ?", whereArgs: [id]);
+        where: "${SurveyResponseAnswer.columnUniqueId} = ?",
+        whereArgs: [uniqueId]);
     return res.isNotEmpty ? SurveyResponseAnswer.fromDbMap(res.first) : null;
   }
 
@@ -248,10 +249,9 @@ class DBProvider {
         "${SurveyResponseAnswer.columnSurveyQuestionChoiceRowId}, "
         "${SurveyResponseAnswer.columnSurveyQuestionChoiceColumnId}, "
         "${SurveyResponseAnswer.columnSurveyQuestionChoiceSelectionId}, "
-        "${SurveyResponseAnswer.columnQuestionType},"
         "${SurveyResponseAnswer.columnResponseText},"
         "${SurveyResponseAnswer.columnSelected})"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        " VALUES (?,?,?,?,?,?,?,?,?,?)",
         [
           surveyResponseAnswer.id,
           surveyResponseAnswer.uniqueId,
@@ -261,7 +261,6 @@ class DBProvider {
           surveyResponseAnswer.surveyQuestionAnswerChoiceRowId,
           surveyResponseAnswer.surveyQuestionAnswerChoiceColumnId,
           surveyResponseAnswer.surveyQuestionAnswerChoiceSelectionId,
-          surveyResponseAnswer.questionType,
           surveyResponseAnswer.responseText,
           surveyResponseAnswer.selected
         ]);
@@ -307,7 +306,7 @@ class DBProvider {
     final db = await database;
     //get the biggest id in the table
     //insert to the table using the new id
-    var raw = await db.rawInsert(
+   await db.rawInsert(
         "INSERT Into ${Survey.tableSurveys} ("
         "${Survey.columnId},"
         "${Survey.columnName},"
@@ -625,6 +624,9 @@ class DBProvider {
   }
 
   Future<SurveySection> getSurveySection(int id) async {
+    if(id==null){
+      return null;
+    }
     final db = await database;
     var res = await db.query(SurveySection.tableSurveySections,
         where: "${SurveySection.columnId} = ?", whereArgs: [id]);
@@ -740,14 +742,14 @@ class DBProvider {
         "(${SurveyResponseSection.columnSurveySectionId},"
         "${SurveyResponseSection.columnSurveyResponseUniqueId}, "
         "${SurveyResponseSection.columnActive}, "
-        "${SurveyResponseSection.columnApplicable},"
+        "${SurveyResponseSection.columnNotApplicable},"
         "${SurveyResponseSection.columnUniqueId})"
         " VALUES (?,?,?,?,?)",
         [
           surveyResponseSection.surveySectionId,
           surveyResponseSection.surveyResponseUniqueId,
           surveyResponseSection.active,
-          surveyResponseSection.applicable,
+          surveyResponseSection.notApplicable,
           surveyResponseSection.uniqueId,
         ]);
     return raw;
@@ -880,7 +882,6 @@ class DBProvider {
       String uniqueId = uuid.v4();
       SurveyResponseAnswer surveyResponseAnswer = SurveyResponseAnswer(
           active: true,
-          questionType: question_type_choices,
           surveyQuestionId: surveyQuestionId,
           surveyResponseUniqueId: surveyResponseUniqueId,
           uniqueId: uniqueId,
@@ -911,11 +912,6 @@ class DBProvider {
           where: "${SurveyResponseAnswer.columnSurveyResponseUniqueId} = ? "
               "and ${SurveyResponseAnswer.columnSurveyQuestionId} = ? ",
           whereArgs: [surveyResponseUniqueId, surveyQuestionId]);
-//      await db.update(SurveyResponseAnswer.tableSurveyResponseAnswers,
-//          {SurveyResponseAnswer.columnSelected: false},
-//          where: "${SurveyResponseAnswer.columnSurveyResponseUniqueId} = ? "
-//              "and ${SurveyResponseAnswer.columnSurveyQuestionId} = ? ",
-//          whereArgs: [surveyResponseUniqueId, surveyQuestionId]);
     }
 
     SurveyResponseAnswer surveyResponseAnswer =
@@ -926,7 +922,6 @@ class DBProvider {
       String uniqueId = uuid.v4();
       SurveyResponseAnswer surveyResponseAnswer = SurveyResponseAnswer(
           active: true,
-          questionType: question_type_choices,
           surveyQuestionId: surveyQuestionId,
           surveyResponseUniqueId: surveyResponseUniqueId,
           uniqueId: uniqueId,
@@ -968,7 +963,6 @@ class DBProvider {
       String uniqueId = uuid.v4();
       SurveyResponseAnswer surveyResponseAnswer = SurveyResponseAnswer(
           active: true,
-          questionType: question_type_matrix,
           surveyQuestionId: surveyQuestionId,
           surveyResponseUniqueId: surveyResponseUniqueId,
           uniqueId: uniqueId,
@@ -1030,7 +1024,6 @@ class DBProvider {
       String uniqueId = uuid.v4();
       SurveyResponseAnswer surveyResponseAnswer = SurveyResponseAnswer(
           active: true,
-          questionType: question_type_matrix,
           surveyQuestionId: surveyQuestionId,
           surveyResponseUniqueId: surveyResponseUniqueId,
           uniqueId: uniqueId,
@@ -1060,7 +1053,17 @@ class DBProvider {
     }
   }
 
-  void updateSurveyResponseSection(
+  updateSurveyResponseSection(
+      SurveyResponseSection surveyResponseSection) async {
+    final db = await database;
+    var res = await db.update(SurveyResponseSection.tableSurveyResponseSections,
+        surveyResponseSection.toDbMap(),
+        where: "${SurveyResponse.columnUniqueId} = ?",
+        whereArgs: [surveyResponseSection.uniqueId]);
+    return res;
+  }
+
+  void updateSurveyResponseSectionApplicability(
       String surveyResponseUniqueId, int surveySectionId, bool selected) async {
     final db = await database;
     var res = await db.query(SurveyResponseSection.tableSurveyResponseSections,
@@ -1080,24 +1083,39 @@ class DBProvider {
           surveyResponseUniqueId: surveyResponseUniqueId,
           active: true,
           uniqueId: uniqueId,
-          applicable: selected,
+          notApplicable: selected,
           surveySectionId: surveySectionId);
       await createSurveyResponseSection(surveyResponseSection);
     } else {
       await db.update(SurveyResponseSection.tableSurveyResponseSections,
-          {SurveyResponseSection.columnApplicable: selected},
+          {SurveyResponseSection.columnNotApplicable: selected},
           where: "${SurveyResponseSection.columnSurveyResponseUniqueId} = ? "
               "and ${SurveyResponseSection.columnSurveySectionId} = ?",
           whereArgs: [surveyResponseUniqueId, surveySectionId]);
     }
   }
 
-  Future<List<int>> getAllApplicableGroupsForSurveyResponse(
+  Future<List<SurveyResponseSection>> getAllSectionsForSurveyResponse(
       String surveyResponseUniqueId) async {
     final db = await database;
     var res = await db.query(SurveyResponseSection.tableSurveyResponseSections,
         where: "${SurveyResponseSection.columnSurveyResponseUniqueId}=? "
-            "and ${SurveyResponseSection.columnApplicable} = ?",
+            "and ${SurveyResponseSection.columnNotApplicable} = ?",
+        whereArgs: [surveyResponseUniqueId, 1]);
+    debugPrint("res $res");
+
+    List<SurveyResponseSection> list = res.isNotEmpty
+        ? res.map((c) => SurveyResponseSection.fromDbMap(c)).toList()
+        : [];
+    return list;
+  }
+
+  Future<List<int>> getAllApplicableSectionsForSurveyResponse(
+      String surveyResponseUniqueId) async {
+    final db = await database;
+    var res = await db.query(SurveyResponseSection.tableSurveyResponseSections,
+        where: "${SurveyResponseSection.columnSurveyResponseUniqueId}=? "
+            "and ${SurveyResponseSection.columnNotApplicable} = ?",
         whereArgs: [surveyResponseUniqueId, 1],
         columns: [SurveyResponseSection.columnSurveySectionId]);
     debugPrint("res $res");

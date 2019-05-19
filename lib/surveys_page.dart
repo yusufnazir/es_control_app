@@ -2,6 +2,8 @@ import 'package:es_control_app/constants.dart';
 import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/survey_forms_page.dart';
+import 'package:es_control_app/util/logout_user.dart';
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:progress_hud_v2/progress_hud.dart';
 
@@ -117,7 +119,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
                       fontWeight: FontWeight.bold,
                     )),
                 onTap: () {
-                  logoutUser();
+                  logoutUser(context);
                 }),
           ],
         ),
@@ -169,20 +171,71 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
   }
 
   _reSync() async {
-    await RestApi().getSurveysFromServerAndStoreInDB();
+    int success = await RestApi().getSurveysFromServerAndStoreInDB();
     await getSurveys();
+
+    if(success>0){
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "Well done.",
+        message: "Your data has been successfully retrieved.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.green[400], Colors.green[600]],
+        ),
+        boxShadow: BoxShadow(
+          color: Colors.green[800],
+          offset: Offset(0.0, 2.0),
+          blurRadius: 3.0,
+        ),
+      )..show(context);
+    }else if(success==0){
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "Nothing found.",
+        message: "Unfortunatly there was no data to retrieve.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.orange[400], Colors.orange[600]],
+        ),
+        boxShadow: BoxShadow(
+          color: Colors.orange[800],
+          offset: Offset(0.0, 2.0),
+          blurRadius: 3.0,
+        ),
+      )..show(context);
+    }else if(success==-1){
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "Oops, what happened?.",
+        message: "There was an error retrieving your the data.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.red[400], Colors.red[600]],
+        ),
+        boxShadow: BoxShadow(
+          color: Colors.red[800],
+          offset: Offset(0.0, 2.0),
+          blurRadius: 3.0,
+        ),
+      )..show(context);
+    }else if(success==-2){
+      logoutUser(context);
+    }
   }
 
   _navigateToSurvey(BuildContext context, Survey survey) {
     Navigator.of(context).push(
         new MaterialPageRoute(builder: (context) => new SurveyPage(survey)));
-  }
-
-  void logoutUser() async {
-    await FileStorage.writeCredentials("");
-    await FileStorage.writeUsername("");
-    Navigator.of(context)
-        .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
   }
 
   void getUsername() async {
