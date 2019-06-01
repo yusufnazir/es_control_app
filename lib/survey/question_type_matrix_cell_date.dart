@@ -6,6 +6,8 @@ import 'package:es_control_app/repository/db_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../constants.dart';
+
 class MatrixCellDate extends StatefulWidget {
   final SurveyQuestion surveyQuestion;
   final SurveyResponse surveyResponse;
@@ -37,7 +39,7 @@ class MatrixCellDateState extends State<MatrixCellDate> {
         firstDate: new DateTime(2016),
         lastDate: new DateTime(2030));
     if (picked != null)
-      _updateText(DateFormat("yyyy-MM-dd").format(picked));
+      _updateText(DateFormat(Constants.dateFormat).format(picked));
   }
 
   @override

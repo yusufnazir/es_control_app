@@ -10,6 +10,8 @@ import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../constants.dart';
+
 class QuestionTypeDate extends StatefulWidget {
   final SurveyQuestion surveyQuestion;
   final SurveyResponse surveyResponse;
@@ -44,7 +46,7 @@ class QuestionTypeDateState extends State<QuestionTypeDate> {
         firstDate: new DateTime(2016),
         lastDate: new DateTime(2030));
     if (picked != null) {
-      _updateText(DateFormat("yyyy-MM-dd").format(picked));
+      _updateText(DateFormat(Constants.dateFormat).format(picked));
     }
   }
 

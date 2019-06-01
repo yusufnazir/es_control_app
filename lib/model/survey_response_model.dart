@@ -92,7 +92,7 @@ class SurveyResponse {
         "uniqueId": uniqueId,
         "surveyId": surveyId,
         "formName": formName,
-        "createdOn": DateFormat(Constants.dateFormatPrecise).format(createdOn),
+        "createdOn": DateFormat(Constants.dateTimeFormatPrecise).format(createdOn),
         "active": active,
         "username": username,
         "uploaded": uploaded,

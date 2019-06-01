@@ -14,7 +14,7 @@ class Utilities {
     if (dateTime == null) {
       return null;
     }
-    return DateFormat(Constants.dateFormat).parse(dateTime);
+    return DateFormat(Constants.dateTimeFormat).parse(dateTime);
   }
 
   static int getSurveyIdFromJson(Map<String, dynamic> json) {

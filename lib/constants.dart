@@ -18,7 +18,8 @@ class Constants {
   static Color dark = const Color(0xFF3B4254);
   static Color accent = const Color(0xFF32C4E6);
 
-  static String _releaseHost = "http://192.168.0.105:9300/escontrol/";
+//  static String _releaseHost = "http://192.168.0.105:9300/escontrol/";
+  static String _releaseHost = "https://software.cxode.com/escontrol/";
   static String tokenUri = getHost() + "oauth/token";
 
   static String getAllSurveys = getHost() + "rest/api/v1/surveys/";
@@ -26,8 +27,9 @@ class Constants {
       getHost() + "rest/api/v1/surveyResponses/";
   static String uploadAllSurveys = getHost() + "rest/api/v1/surveyResponses/";
 
-  static String dateFormat = "yyyy-MM-dd HH:mm";
-  static String dateFormatPrecise = "yyyy-MM-dd HH:mm:ss";
+  static String dateFormat = "yyyy-MM-dd";
+  static String dateTimeFormat = "yyyy-MM-dd HH:mm";
+  static String dateTimeFormatPrecise = "yyyy-MM-dd HH:mm:ss";
 
   static String client = "escontrol";
   static String clientSecret = "escontrol";

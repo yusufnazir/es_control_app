@@ -94,7 +94,7 @@ class FormCardTileState extends State<FormCardTile> {
         subtitle: Row(
           children: <Widget>[
             Icon(Icons.date_range, color: Colors.yellowAccent),
-            Text(" ${DateFormat(Constants.dateFormat).format(widget.surveyResponse.createdOn)}",
+            Text(" ${DateFormat(Constants.dateTimeFormat).format(widget.surveyResponse.createdOn)}",
                 style: TextStyle(color: Colors.white))
           ],
         ),
