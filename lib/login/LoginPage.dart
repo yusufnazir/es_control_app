@@ -234,11 +234,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         backgroundGradient: LinearGradient(
           colors: [Colors.red[400], Colors.red[600]],
         ),
-        boxShadow: BoxShadow(
-          color: Colors.red[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        ),
+        boxShadows: <BoxShadow>[
+          BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
     }
 
@@ -251,7 +253,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 // Once we're done with the client, save the credentials file. This will allow
 // us to re-use the credentials and avoid storing the username and password
 // directly.
-
   }
 
   void animateButton() {

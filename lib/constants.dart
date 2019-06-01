@@ -18,8 +18,7 @@ class Constants {
   static Color dark = const Color(0xFF3B4254);
   static Color accent = const Color(0xFF32C4E6);
 
-  static String _debugHost = "https://software.cxode.com/escontrol/";
-  static String _releaseHost = "https://software.cxode.com/escontrol/";
+  static String _releaseHost = "http://192.168.0.105:9300/escontrol/";
   static String tokenUri = getHost() + "oauth/token";
 
   static String getAllSurveys = getHost() + "rest/api/v1/surveys/";

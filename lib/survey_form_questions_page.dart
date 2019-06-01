@@ -256,11 +256,12 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
         message:
             "Please review the following question: ${surveyQuestionRequired.question}",
         backgroundColor: Colors.red,
-        boxShadow: BoxShadow(
+        boxShadows: <BoxShadow>[
+        BoxShadow(
           color: Colors.red[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
-        ),
+        )],
       )..show(context);
       surveyQuestionRequired = null;
     } else {
@@ -275,11 +276,12 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
         backgroundGradient: LinearGradient(
           colors: [Constants.primaryColorLight, Constants.primaryColor],
         ),
-        boxShadow: BoxShadow(
+        boxShadows: <BoxShadow>[
+        BoxShadow(
           color: Colors.green[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
-        ),
+        )],
       )..show(context);
 //      final snackBar = SnackBar(
 //        content: Text('All required questions have been filled.'),

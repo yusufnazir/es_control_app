@@ -186,11 +186,12 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
         backgroundGradient: LinearGradient(
           colors: [Colors.green[400], Colors.green[600]],
         ),
-        boxShadow: BoxShadow(
+        boxShadows: <BoxShadow>[
+        BoxShadow(
           color: Colors.green[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
-        ),
+        )],
       )..show(context);
     }else if(success==0){
       Flushbar(
@@ -204,11 +205,12 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
         backgroundGradient: LinearGradient(
           colors: [Colors.orange[400], Colors.orange[600]],
         ),
-        boxShadow: BoxShadow(
+        boxShadows: <BoxShadow>[
+        BoxShadow(
           color: Colors.orange[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
-        ),
+        )],
       )..show(context);
     }else if(success==-1){
       Flushbar(
@@ -222,11 +224,12 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
         backgroundGradient: LinearGradient(
           colors: [Colors.red[400], Colors.red[600]],
         ),
-        boxShadow: BoxShadow(
+        boxShadows: <BoxShadow>[
+        BoxShadow(
           color: Colors.red[800],
           offset: Offset(0.0, 2.0),
           blurRadius: 3.0,
-        ),
+        )],
       )..show(context);
     }else if(success==-2){
       logoutUser(context);

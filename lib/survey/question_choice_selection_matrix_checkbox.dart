@@ -101,8 +101,8 @@ class ChoiceSelectionCheckboxState extends State<ChoiceSelectionCheckbox> {
         widget.surveyQuestionAnswerChoiceSelection.id,
         widget.surveyQuestionAnswerChoiceColumn.matrixColumnType);
     widget.streamController.add(value);
-//    setState(() {
-//      checked = value;
-//    });
+    setState(() {
+      checked = value;
+    });
   }
 }

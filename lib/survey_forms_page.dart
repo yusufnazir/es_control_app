@@ -272,6 +272,24 @@ class SurveyPageState extends State<SurveyPage> {
         await DBProvider.db
             .updateSurveyResponseUploaded(surveyResponse.uniqueId, true);
         callback();
+        Flushbar(
+          duration: Duration(seconds: 8),
+          flushbarPosition: FlushbarPosition.TOP,
+          flushbarStyle: FlushbarStyle.FLOATING,
+          isDismissible: true,
+          dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+          title: "Well done.",
+          message: "Your data has been successfully uploaded.",
+          backgroundGradient: LinearGradient(
+            colors: [Colors.green[400], Colors.green[600]],
+          ),
+          boxShadows: <BoxShadow>[
+            BoxShadow(
+              color: Colors.green[800],
+              offset: Offset(0.0, 2.0),
+              blurRadius: 3.0,
+            )],
+        )..show(context);
       } else if(responseCode==-2){
         logoutUser(context);
       } else {
@@ -286,11 +304,12 @@ class SurveyPageState extends State<SurveyPage> {
           backgroundGradient: LinearGradient(
             colors: [Colors.red[400], Colors.red[600]],
           ),
-          boxShadow: BoxShadow(
+          boxShadows: <BoxShadow>[
+          BoxShadow(
             color: Colors.red[800],
             offset: Offset(0.0, 2.0),
             blurRadius: 3.0,
-          ),
+          )],
         )..show(context);
       }
       toggleProgressHUD();

@@ -4,6 +4,7 @@ import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
 import 'package:es_control_app/survey/question_type_matrix_cell_choice.dart';
+import 'package:es_control_app/survey/question_type_matrix_cell_date.dart';
 import 'package:es_control_app/survey/question_type_matrix_cell_text.dart';
 import 'package:es_control_app/util/matrix_column_types.dart';
 import 'package:es_control_app/widgets/question_card_header.dart';
@@ -56,7 +57,8 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
           Map columnWidths = Map<int, TableColumnWidth>();
           int i = 0;
           columns.forEach((p) {
-            if (p.matrixColumnType == single_composite_selection || p.matrixColumnType == multiple_composite_selection) {
+            if (p.matrixColumnType == single_composite_selection || p.matrixColumnType == multiple_composite_selection
+            ||p.matrixColumnType == date_) {
 //              columnWidths[i] = FixedColumnWidth(400.0);
               columnWidths[i] = IntrinsicColumnWidth();
             } else {
@@ -157,6 +159,12 @@ class QuestionTypeMatrixState extends State<QuestionTypeMatrix> {
             child: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: MatrixCellText(widget.surveyResponse,
+                    widget.surveyQuestion, row, column)));
+      case date_:
+        return TableCell(
+            child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: MatrixCellDate(widget.surveyResponse,
                     widget.surveyQuestion, row, column)));
     }
   }

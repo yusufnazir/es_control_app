@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
-import 'package:es_control_app/survey/question_type_area_ft_inch.dart';
+import 'package:es_control_app/survey/question_type_area_feet_inch.dart';
+import 'package:es_control_app/survey/question_type_date.dart';
+import 'package:es_control_app/survey/question_type_length_feet_inch.dart';
 import 'package:es_control_app/util/question_types.dart';
 import 'package:flutter/material.dart';
 
@@ -50,6 +52,25 @@ class QuestionWidgetState extends State<QuestionWidget> {
                 widget.streamControllerMakeQuestionRequired,
             streamControllerMakeQuestionByGroupRequired:
                 widget.streamControllerMakeQuestionByGroupRequired,
+            requiredQuestionId: widget.requiredQuestionId);
+      case question_type_date:
+        debugPrint("Question Type Date");
+        return QuestionTypeDate(
+            surveyResponse: widget.surveyResponse,
+            surveyQuestion: widget.surveyQuestion,
+            streamControllerMakeQuestionRequired:
+            widget.streamControllerMakeQuestionRequired,
+            streamControllerMakeQuestionByGroupRequired:
+            widget.streamControllerMakeQuestionByGroupRequired,
+            requiredQuestionId: widget.requiredQuestionId);
+      case question_type_length_ft_inch:
+        return QuestionTypeLengthFeetInch(
+            surveyResponse: widget.surveyResponse,
+            surveyQuestion: widget.surveyQuestion,
+            streamControllerMakeQuestionRequired:
+            widget.streamControllerMakeQuestionRequired,
+            streamControllerMakeQuestionByGroupRequired:
+            widget.streamControllerMakeQuestionByGroupRequired,
             requiredQuestionId: widget.requiredQuestionId);
       case question_type_area_ft_inch:
         return QuestionTypeAreaFtInch(
