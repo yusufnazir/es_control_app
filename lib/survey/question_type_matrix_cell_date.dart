@@ -3,6 +3,7 @@ import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/util/matrix_column_types.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -129,7 +130,8 @@ class MatrixCellDateState extends State<MatrixCellDate> {
         widget.surveyQuestion.id,
         value,
         widget.surveyQuestionAnswerChoiceRow.id,
-        widget.surveyQuestionAnswerChoiceColumn.id);
+        widget.surveyQuestionAnswerChoiceColumn.id,
+        date_);
     setState(() {
       oldValue = value;
     });

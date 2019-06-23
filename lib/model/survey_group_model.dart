@@ -13,14 +13,15 @@ class SurveyGroup {
   String description;
   int surveyId;
   bool active;
+  String applicationUser;
 
-  SurveyGroup({
-    this.id,
-    this.name,
-    this.description,
-    this.surveyId,
-    this.active,
-  });
+  SurveyGroup(
+      {this.id,
+      this.name,
+      this.description,
+      this.surveyId,
+      this.active,
+      this.applicationUser});
 
   SurveyGroup clientFromJson(String str) {
     final jsonData = json.decode(str);
@@ -33,20 +34,21 @@ class SurveyGroup {
   }
 
   factory SurveyGroup.fromJsonMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyGroup(
         id: json["id"],
         name: json["name"],
         description: json["description"],
         surveyId: json["surveyId"],
         active: json["active"] == true,
+        applicationUser: json["applicationUser"],
       );
     }
     return null;
   }
 
   factory SurveyGroup.fromDbMap(Map<String, dynamic> json) {
-    if(json!=null) {
+    if (json != null) {
       return SurveyGroup(
         id: json[columnId],
         name: json[columnName],
@@ -75,7 +77,8 @@ class SurveyGroup {
           name == other.name &&
           description == other.description &&
           surveyId == other.surveyId &&
-          active == other.active;
+          active == other.active &&
+          applicationUser == other.applicationUser;
 
   @override
   int get hashCode =>
@@ -83,10 +86,11 @@ class SurveyGroup {
       name.hashCode ^
       description.hashCode ^
       surveyId.hashCode ^
-      active.hashCode;
+      active.hashCode ^
+      applicationUser.hashCode;
 
   @override
   String toString() {
-    return 'SurveyGroup{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active}';
+    return 'SurveyGroup{id: $id, name: $name, description: $description, surveyId: $surveyId, active: $active, applicationUser: $applicationUser}';
   }
 }

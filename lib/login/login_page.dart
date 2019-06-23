@@ -1,5 +1,6 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/routes.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     final emailField = TextField(
       controller: _usernameFilter,
       obscureText: false,
+      textInputAction: TextInputAction.next,
       style: TextStyle(
           fontFamily: 'Montserrat', fontSize: 20.0, color: Colors.white),
       decoration: InputDecoration(
@@ -87,28 +89,35 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
     final passwordField = TextField(
-        controller: _passwordFilter,
-        obscureText: true,
-        style: TextStyle(
-            fontFamily: 'Montserrat', fontSize: 20.0, color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(
-            Icons.lock,
-            size: 40,
-            color: Colors.white,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white, width: 1.0),
-          ),
-          contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          hintText: "Password",
-          hintStyle: TextStyle(color: Colors.white),
-          labelText: "Enter your password",
-          labelStyle: TextStyle(color: Colors.white),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-        ));
+      controller: _passwordFilter,
+      obscureText: true,
+      textInputAction: TextInputAction.done,
+      style: TextStyle(
+          fontFamily: 'Montserrat', fontSize: 20.0, color: Colors.white),
+      decoration: InputDecoration(
+        prefixIcon: Icon(
+          Icons.lock,
+          size: 40,
+          color: Colors.white,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 1.0),
+        ),
+        contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+        hintText: "Password",
+        hintStyle: TextStyle(color: Colors.white),
+        labelText: "Enter your password",
+        labelStyle: TextStyle(color: Colors.white),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+      ),
+      onSubmitted: (value) {
+        if (_state == 0) {
+          animateButton();
+        }
+      },
+    );
     final loginButton = Material(
       elevation: 5.0,
       borderRadius: BorderRadius.circular(30.0),
@@ -214,8 +223,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       var client = await oauth2.resourceOwnerPasswordGrant(
           authorizationEndpoint, _username, _password,
           identifier: Constants.client, secret: Constants.clientSecret);
-      FileStorage.writeCredentials(client.credentials.toJson());
-      FileStorage.writeUsername(_username);
+      Preferences.writeCredentials(client.credentials.toJson());
+      Preferences.writeUsername(_username);
       Navigator.of(context).pushNamedAndRemoveUntil(
           Routes.surveys, (Route<dynamic> route) => false);
     } catch (e) {
@@ -255,16 +264,41 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 // directly.
   }
 
-  void animateButton() {
-    _controller =
-        AnimationController(duration: Duration(milliseconds: 300), vsync: this);
-    _controller.forward();
+  void animateButton() async {
+    ConnectivityResult connectivityResult =
+        await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      _controller = AnimationController(
+          duration: Duration(milliseconds: 300), vsync: this);
+      _controller.forward();
 
-    setState(() {
-      _state = 1;
-    });
-    FocusScope.of(context).requestFocus(new FocusNode());
-    loginUser();
+      setState(() {
+        _state = 1;
+      });
+      FocusScope.of(context).requestFocus(new FocusNode());
+      loginUser();
+    } else {
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "No connection.",
+        message: "We could not find an internet connection to use.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.red[400], Colors.red[600]],
+        ),
+        boxShadows: <BoxShadow>[
+          BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
+      )..show(context);
+    }
   }
 
   setUpButtonChild() {

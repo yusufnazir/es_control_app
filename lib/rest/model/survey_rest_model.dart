@@ -5,6 +5,7 @@ import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_question_user_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 
 SurveyRestModel clientFromJson(String str) {
@@ -19,6 +20,7 @@ String clientToJson(SurveyRestModel data) {
 
 class SurveyRestModel {
   Survey survey;
+  List<SurveyQuestionUser> surveyQuestionUsers;
   List<SurveySection> surveySections;
   List<SurveyGroup> surveyGroups;
   List<SurveyQuestion> surveyQuestions;
@@ -26,16 +28,17 @@ class SurveyRestModel {
   List<SurveyQuestionAnswerChoiceSelection>
       surveyQuestionAnswerChoiceSelections;
 
-  SurveyRestModel({
-    this.survey,
-    this.surveySections,
-    this.surveyGroups,
-    this.surveyQuestions,
-    this.surveyQuestionAnswerChoices,
-    this.surveyQuestionAnswerChoiceSelections,
-  });
+  SurveyRestModel(
+      {this.survey,
+      this.surveySections,
+      this.surveyGroups,
+      this.surveyQuestions,
+      this.surveyQuestionAnswerChoices,
+      this.surveyQuestionAnswerChoiceSelections,
+      this.surveyQuestionUsers});
 
-  factory SurveyRestModel.fromMap(Map<String, dynamic> json) => new SurveyRestModel(
+  factory SurveyRestModel.fromMap(Map<String, dynamic> json) =>
+      new SurveyRestModel(
         survey: Survey.fromJsonMap(json["survey"]),
         surveySections: json["surveySections"]
             .map<SurveySection>((value) => SurveySection.fromJsonMap(value))
@@ -55,6 +58,10 @@ class SurveyRestModel {
                 .map<SurveyQuestionAnswerChoiceSelection>((value) =>
                     SurveyQuestionAnswerChoiceSelection.fromJsonMap(value))
                 .toList(),
+        surveyQuestionUsers: json["surveyQuestionUsers"]
+            .map<SurveyQuestionUser>(
+                (value) => SurveyQuestionUser.fromJsonMap(value))
+            .toList(),
       );
 
   Map<String, dynamic> toMap() => {
@@ -65,5 +72,6 @@ class SurveyRestModel {
         "surveyQuestionAnswerChoices": surveyQuestionAnswerChoices,
         "surveyQuestionAnswerChoiceSelections":
             surveyQuestionAnswerChoiceSelections,
+        "surveyQuestionUsers": surveyQuestionUsers
       };
 }

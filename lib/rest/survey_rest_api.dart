@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/model/survey_group_model.dart';
 import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_model.dart';
 import 'package:es_control_app/model/survey_question_answer_choice_selection_model.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
+import 'package:es_control_app/model/survey_question_user_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/model/survey_response_section_model.dart';
@@ -18,6 +19,8 @@ import 'package:es_control_app/rest/model/survey_rest_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
+
+import '../survey_state.dart';
 
 const oauthErrors = [
   "invalid_request",
@@ -36,24 +39,28 @@ class RestApi {
    */
   Future<int> getSurveysFromServerAndStoreInDB() async {
     try {
-      cleanUpDatabase();
-      String credentials = await FileStorage.readCredentials();
+//      cleanUpDatabase();
+      String credentials = await Preferences.readCredentials();
 
       oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
           identifier: "escontrol", secret: "escontrol");
 
       var response = await cl.get(Constants.getAllSurveys);
-//    .get("http://10.10.10.100:9300/escontrol/rest/api/v1/surveys/");
-//          .get("http://192.168.1.9:9300/escontrol/rest/api/v1/surveys/");
-//      debugPrint(response.body);
       List<SurveyRestModel> surveyPojos = parseSurveys(response.body);
       if (surveyPojos == null || surveyPojos.length == 0) {
         return 0;
       }
+      String username = await Preferences.readUsername();
+      await cleanUpSurveyUserForUsername(username);
+
       if (surveyPojos != null) {
         for (SurveyRestModel surveyPojo in surveyPojos) {
           Survey survey = surveyPojo.survey;
           await manageSurvey(survey);
+
+          List<SurveyQuestionUser> surveyQuestionUsers =
+              surveyPojo.surveyQuestionUsers;
+          await manageSurveyQuestionUsers(survey.id, surveyQuestionUsers);
 
           List<SurveySection> surveySections = surveyPojo.surveySections;
           await manageSurveySections(surveySections);
@@ -75,7 +82,14 @@ class RestApi {
               surveyQuestionAnswerChoiceSelections);
         }
 
-        var response = await cl.get(Constants.getAllSurveyResponses);
+        var response = await cl.get(Constants.getAllActiveSurveyResponseUuIds);
+        List<String> surveyResponseUuIds =
+            List<String>.from(json.decode(response.body));
+        await DBProvider.db.removeInactiveSurveyResponses(surveyResponseUuIds);
+
+        await DBProvider.db.removeSyncedSurveyResponseAnswers();
+
+        response = await cl.get(Constants.getAllSurveyResponses);
         List<SurveyResponseRestModel> surveyResponses =
             await parseSurveyResponses(response.body);
         await manageSurveyResponses(surveyResponses);
@@ -153,13 +167,20 @@ class RestApi {
               await DBProvider.db
                   .createSurveyResponseAnswer(surveyResponseAnswer);
             } else {
-              await DBProvider.db
-                  .updateSurveyResponseAnswer(surveyResponseAnswer);
+              String state = existingSurveyResponseAnswer.state;
+              if (state == SurveyState.synced) {
+                await DBProvider.db
+                    .updateSurveyResponseAnswer(surveyResponseAnswer);
+              }
             }
           }
         }
       }
     }
+  }
+
+  cleanUpSurveyUserForUsername(String username) async{
+    await DBProvider.db.cleanUpSurveyUserForUsername(username);
   }
 
   manageSurvey(Survey survey) async {
@@ -168,6 +189,24 @@ class RestApi {
       await DBProvider.db.createSurvey(survey);
     } else {
       await DBProvider.db.updateSurvey(survey);
+    }
+    String username = await Preferences.readUsername();
+    await DBProvider.db.createSurveyUser(survey.id,username);
+  }
+
+  manageSurveyQuestionUsers(int surveyId,
+      List<SurveyQuestionUser> surveyQuestionUsers) async {
+    await DBProvider.db.deleteSurveyQuestionUserForSurvey(surveyId);
+    if (surveyQuestionUsers != null) {
+      for (SurveyQuestionUser surveyQuestionUser in surveyQuestionUsers) {
+        SurveyQuestionUser existingSurveyQuestionUser =
+            await DBProvider.db.getSurveyQuestionUser(surveyQuestionUser.id);
+        if (existingSurveyQuestionUser == null) {
+          await DBProvider.db.createSurveyQuestionUser(surveyQuestionUser);
+        } else {
+          await DBProvider.db.updateSurveyQuestionUser(surveyQuestionUser);
+        }
+      }
     }
   }
 
@@ -267,9 +306,9 @@ class RestApi {
         surveyResponseAnswers: surveyResponseAnswers,
         surveyResponseSections: surveyResponseSections);
 
-    String username = await FileStorage.readUsername();
+    String username = await Preferences.readUsername();
     surveyResponse.username = username;
-    String credentials = await FileStorage.readCredentials();
+    String credentials = await Preferences.readCredentials();
     oauth2.Client cl = oauth2.Client(oauth2.Credentials.fromJson(credentials),
         identifier: "escontrol", secret: "escontrol");
     String surveyResponseJson =
@@ -282,7 +321,13 @@ class RestApi {
             "Content-Type": "application/json"
           },
           encoding: Encoding.getByName("utf-8"));
-      return response.statusCode;
+      await DBProvider.db
+          .getAllSectionsForSurveyResponse(surveyResponse.uniqueId);
+      var statusCode = response.statusCode;
+      await DBProvider.db
+          .updateAllSurveyResponseAnswerAsSynced(surveyResponse.uniqueId);
+
+      return statusCode;
     } on oauth2.AuthorizationException catch (e) {
       debugPrint(e.toString());
       if (oauthErrors.contains(e.error)) {

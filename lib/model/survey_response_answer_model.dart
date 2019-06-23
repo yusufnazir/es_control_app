@@ -9,6 +9,7 @@ class SurveyResponseAnswer {
   static final String columnSurveyResponseUniqueId =
       "survey_response_unique_id";
   static final String columnSurveyQuestionId = "survey_question_id";
+  static final String columnQuestionType = "question_type";
   static final String columnSurveyQuestionChoiceRowId =
       "survey_question_choice_row_id";
   static final String columnSurveyQuestionChoiceColumnId =
@@ -18,12 +19,15 @@ class SurveyResponseAnswer {
   static final String columnResponseText = "response_text";
   static final String columnOtherValue = "other_value";
   static final String columnSelected = "selected";
+  static final String columnState = "state";
+  static final String columnMatrixColumnType = "matrix_column_type";
 
   int id;
   String uniqueId;
   bool active;
   String surveyResponseUniqueId;
   int surveyQuestionId;
+  String questionType;
   int surveyQuestionAnswerChoiceRowId;
   int surveyQuestionAnswerChoiceColumnId;
   int surveyQuestionAnswerChoiceSelectionId;
@@ -31,6 +35,7 @@ class SurveyResponseAnswer {
   String responseText;
   String otherValue;
   bool selected;
+  String state;
 
   SurveyResponseAnswer({
     this.id,
@@ -38,12 +43,15 @@ class SurveyResponseAnswer {
     this.active,
     this.surveyResponseUniqueId,
     this.surveyQuestionId,
+    this.questionType,
     this.surveyQuestionAnswerChoiceRowId,
     this.surveyQuestionAnswerChoiceColumnId,
     this.surveyQuestionAnswerChoiceSelectionId,
     this.responseText,
     this.otherValue,
     this.selected,
+    this.state,
+    this.matrixColumnType,
   });
 
   SurveyResponseAnswer clientFromJson(String str) {
@@ -59,20 +67,24 @@ class SurveyResponseAnswer {
   factory SurveyResponseAnswer.fromJsonMap(Map<String, dynamic> json) {
     if (json != null) {
       return SurveyResponseAnswer(
-          id: json["id"],
-          uniqueId: json["uniqueId"],
-          active: json["active"] == true,
-          surveyResponseUniqueId: json["surveyResponseUniqueId"],
-          surveyQuestionId: json["surveyQuestionId"],
-          surveyQuestionAnswerChoiceRowId:
-              json["surveyQuestionAnswerChoiceRowId"],
-          surveyQuestionAnswerChoiceColumnId:
-              json["surveyQuestionAnswerChoiceColumnId"],
-          surveyQuestionAnswerChoiceSelectionId:
-              json["surveyQuestionAnswerChoiceSelectionId"],
-          responseText: json["responseText"],
-          otherValue: json["otherValue"],
-          selected: json["selected"] == true);
+        id: json["id"],
+        uniqueId: json["uniqueId"],
+        active: json["active"] == true,
+        surveyResponseUniqueId: json["surveyResponseUniqueId"],
+        surveyQuestionId: json["surveyQuestionId"],
+        questionType: json["questionType"],
+        surveyQuestionAnswerChoiceRowId:
+            json["surveyQuestionAnswerChoiceRowId"],
+        surveyQuestionAnswerChoiceColumnId:
+            json["surveyQuestionAnswerChoiceColumnId"],
+        surveyQuestionAnswerChoiceSelectionId:
+            json["surveyQuestionAnswerChoiceSelectionId"],
+        responseText: json["responseText"],
+        otherValue: json["otherValue"],
+        selected: json["selected"] == true,
+        state: json["state"],
+        matrixColumnType: json["matrixColumnType"],
+      );
     }
     return null;
   }
@@ -80,20 +92,23 @@ class SurveyResponseAnswer {
   factory SurveyResponseAnswer.fromDbMap(Map<String, dynamic> json) {
     if (json != null) {
       return SurveyResponseAnswer(
-        id: json[columnId],
-        uniqueId: json[columnUniqueId],
-        surveyResponseUniqueId: json[columnSurveyResponseUniqueId],
-        surveyQuestionId: json[columnSurveyQuestionId],
-        surveyQuestionAnswerChoiceRowId: json[columnSurveyQuestionChoiceRowId],
-        surveyQuestionAnswerChoiceColumnId:
-            json[columnSurveyQuestionChoiceColumnId],
-        surveyQuestionAnswerChoiceSelectionId:
-            json[columnSurveyQuestionChoiceSelectionId],
-        responseText: json[columnResponseText],
-        otherValue: json[columnOtherValue],
-        active: json[columnActive] == 1,
-        selected: json[columnSelected] == 1,
-      );
+          id: json[columnId],
+          uniqueId: json[columnUniqueId],
+          surveyResponseUniqueId: json[columnSurveyResponseUniqueId],
+          surveyQuestionId: json[columnSurveyQuestionId],
+          questionType: json[columnQuestionType],
+          surveyQuestionAnswerChoiceRowId:
+              json[columnSurveyQuestionChoiceRowId],
+          surveyQuestionAnswerChoiceColumnId:
+              json[columnSurveyQuestionChoiceColumnId],
+          surveyQuestionAnswerChoiceSelectionId:
+              json[columnSurveyQuestionChoiceSelectionId],
+          responseText: json[columnResponseText],
+          otherValue: json[columnOtherValue],
+          active: json[columnActive] == 1,
+          selected: json[columnSelected] == 1,
+          state: json[columnState],
+          matrixColumnType: json[columnMatrixColumnType]);
     }
     return null;
   }
@@ -103,6 +118,7 @@ class SurveyResponseAnswer {
         columnUniqueId: uniqueId,
         columnSurveyResponseUniqueId: surveyResponseUniqueId,
         columnSurveyQuestionId: surveyQuestionId,
+        columnQuestionType: questionType,
         columnSurveyQuestionChoiceRowId: surveyQuestionAnswerChoiceRowId,
         columnSurveyQuestionChoiceColumnId: surveyQuestionAnswerChoiceColumnId,
         columnSurveyQuestionChoiceSelectionId:
@@ -110,7 +126,9 @@ class SurveyResponseAnswer {
         columnResponseText: responseText,
         columnOtherValue: otherValue,
         columnActive: active,
-        columnSelected: selected
+        columnSelected: selected,
+        columnState: state,
+        columnMatrixColumnType: matrixColumnType
       };
 
   Map<String, dynamic> toJson() => {
@@ -119,6 +137,7 @@ class SurveyResponseAnswer {
         'active': active,
         'surveyResponseUniqueId': surveyResponseUniqueId,
         'surveyQuestionId': surveyQuestionId,
+        'questionType': questionType,
         'surveyQuestionAnswerChoiceRowId': surveyQuestionAnswerChoiceRowId,
         'surveyQuestionAnswerChoiceColumnId':
             surveyQuestionAnswerChoiceColumnId,
@@ -128,6 +147,8 @@ class SurveyResponseAnswer {
         'responseText': responseText,
         'otherValue': otherValue,
         'selected': selected,
+        'state': state,
+        'matrixColumnType': matrixColumnType,
       };
 
   @override
@@ -140,6 +161,7 @@ class SurveyResponseAnswer {
           active == other.active &&
           surveyResponseUniqueId == other.surveyResponseUniqueId &&
           surveyQuestionId == other.surveyQuestionId &&
+          questionType == other.questionType &&
           surveyQuestionAnswerChoiceRowId ==
               other.surveyQuestionAnswerChoiceRowId &&
           surveyQuestionAnswerChoiceColumnId ==
@@ -149,7 +171,8 @@ class SurveyResponseAnswer {
           matrixColumnType == other.matrixColumnType &&
           responseText == other.responseText &&
           otherValue == other.otherValue &&
-          selected == other.selected;
+          selected == other.selected &&
+          state == other.state;
 
   @override
   int get hashCode =>
@@ -158,13 +181,15 @@ class SurveyResponseAnswer {
       active.hashCode ^
       surveyResponseUniqueId.hashCode ^
       surveyQuestionId.hashCode ^
+      questionType.hashCode ^
       surveyQuestionAnswerChoiceRowId.hashCode ^
       surveyQuestionAnswerChoiceColumnId.hashCode ^
       surveyQuestionAnswerChoiceSelectionId.hashCode ^
       matrixColumnType.hashCode ^
       responseText.hashCode ^
       otherValue.hashCode ^
-      selected.hashCode;
+      selected.hashCode ^
+      state.hashCode;
 
   @override
   String toString() {

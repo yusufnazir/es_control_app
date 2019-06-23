@@ -61,7 +61,26 @@ class Survey {
       };
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is Survey &&
+              runtimeType == other.runtimeType &&
+              id == other.id &&
+              name == other.name &&
+              description == other.description &&
+              active == other.active;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      description.hashCode ^
+      active.hashCode;
+
+  @override
   String toString() {
     return 'Survey{id: $id, name: $name, description: $description, active: $active}';
   }
+
+
 }

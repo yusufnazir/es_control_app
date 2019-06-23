@@ -1,5 +1,6 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/survey_forms_page.dart';
 import 'package:es_control_app/util/logout_user.dart';
@@ -174,7 +175,7 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
     int success = await RestApi().getSurveysFromServerAndStoreInDB();
     await getSurveys();
 
-    if(success>0){
+    if (success > 0) {
       Flushbar(
         duration: Duration(seconds: 8),
         flushbarPosition: FlushbarPosition.TOP,
@@ -187,13 +188,14 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
           colors: [Colors.green[400], Colors.green[600]],
         ),
         boxShadows: <BoxShadow>[
-        BoxShadow(
-          color: Colors.green[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        )],
+          BoxShadow(
+            color: Colors.green[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
-    }else if(success==0){
+    } else if (success == 0) {
       Flushbar(
         duration: Duration(seconds: 8),
         flushbarPosition: FlushbarPosition.TOP,
@@ -206,13 +208,14 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
           colors: [Colors.orange[400], Colors.orange[600]],
         ),
         boxShadows: <BoxShadow>[
-        BoxShadow(
-          color: Colors.orange[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        )],
+          BoxShadow(
+            color: Colors.orange[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
-    }else if(success==-1){
+    } else if (success == -1) {
       Flushbar(
         duration: Duration(seconds: 8),
         flushbarPosition: FlushbarPosition.TOP,
@@ -225,13 +228,14 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
           colors: [Colors.red[400], Colors.red[600]],
         ),
         boxShadows: <BoxShadow>[
-        BoxShadow(
-          color: Colors.red[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        )],
+          BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
-    }else if(success==-2){
+    } else if (success == -2) {
       logoutUser(context);
     }
   }
@@ -242,55 +246,80 @@ class _SurveysListingPageState extends State<SurveysListingPage> {
   }
 
   void getUsername() async {
-    String username = await FileStorage.readUsername();
+    String username = await Preferences.readUsername();
     setState(() {
       _username = username;
     });
   }
 
-  void syncQuestionsDialog({Function callback}) {
-    showDialog(
-        context: context,
-        builder: (BuildContext buildContext) {
-          return AlertDialog(
-            contentPadding: EdgeInsets.all(0.0),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0)),
-            title: Text(
-              "Are you sure you want to sync the data?",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Constants.primaryColor),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(ConfirmAction.CANCEL);
-                },
+  void syncQuestionsDialog({Function callback}) async {
+    ConnectivityResult connectivityResult =
+        await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      showDialog(
+          context: context,
+          builder: (BuildContext buildContext) {
+            return AlertDialog(
+              contentPadding: EdgeInsets.all(0.0),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0)),
+              title: Text(
+                "Are you sure you want to sync the data?",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Constants.primaryColor),
               ),
-              FlatButton(
-                child: const Text(
-                  'Yes',
-                  style: TextStyle(color: Colors.green),
+              actions: <Widget>[
+                FlatButton(
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(ConfirmAction.CANCEL);
+                  },
                 ),
-                onPressed: () {
-                  if (callback != null) {
-                    callback();
-                  }
-                  dismissProgressHUD();
-                  setState(() {
-                    present = 0;
-                    surveys.clear();
-                    _reSync();
-                  });
-                  Navigator.of(context).pop(ConfirmAction.ACCEPT);
-                },
-              )
-            ],
-          );
-        });
+                FlatButton(
+                  child: const Text(
+                    'Yes',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                  onPressed: () {
+                    if (callback != null) {
+                      callback();
+                    }
+                    dismissProgressHUD();
+                    setState(() {
+                      present = 0;
+                      surveys.clear();
+                      _reSync();
+                    });
+                    Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                  },
+                )
+              ],
+            );
+          });
+    } else {
+      Flushbar(
+        duration: Duration(seconds: 8),
+        flushbarPosition: FlushbarPosition.TOP,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        isDismissible: true,
+        dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+        title: "No connection.",
+        message: "We could not find an internet connection to use.",
+        backgroundGradient: LinearGradient(
+          colors: [Colors.red[400], Colors.red[600]],
+        ),
+        boxShadows: <BoxShadow>[
+          BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
+      )..show(context);
+    }
   }
 }

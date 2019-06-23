@@ -5,6 +5,7 @@ import 'package:es_control_app/model/survey_response_answer_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
 import 'package:es_control_app/streamcontrollerbeans/stream_controller_bean_choice.dart';
+import 'package:es_control_app/util/question_types.dart';
 import 'package:es_control_app/widgets/question_card_header.dart';
 import 'package:es_control_app/widgets/sized_circular_progress_bar.dart';
 import 'package:flutter/material.dart';
@@ -172,7 +173,9 @@ class QuestionTypeDateState extends State<QuestionTypeDate> {
 
   _updateText(String value) async {
     await DBProvider.db.updateSurveyResponseAnswerForSingleText(
-        widget.surveyResponse.uniqueId, widget.surveyQuestion.id, value);
+        widget.surveyResponse.uniqueId,
+        widget.surveyQuestion.id,
+        value);
     setState(() {
       oldValue = value;
     });

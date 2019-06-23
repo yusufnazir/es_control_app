@@ -1,13 +1,14 @@
 // This sample shows adding an action to an [AppBar] that opens a shopping cart.
 
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/file_storage.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/home.dart';
 import 'package:es_control_app/l10n/localizations.dart';
-import 'package:es_control_app/login/LoginPage.dart';
+import 'package:es_control_app/login/login_page.dart';
 import 'package:es_control_app/surveys_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   ThemeData _buildShrineTheme() {
@@ -75,8 +76,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   toLoginOrNot() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     await Future.delayed(Duration(seconds: 2));
-    String credentials = await FileStorage.readCredentials();
+    String credentials = await Preferences.readCredentials();
     if (credentials == null || credentials.trim().isEmpty) {
       Navigator.of(context)
           .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);

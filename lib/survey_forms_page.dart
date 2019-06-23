@@ -1,8 +1,9 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/file_storage.dart';
 import 'package:es_control_app/form_card.dart';
 import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/rest/survey_rest_api.dart';
 import 'package:es_control_app/util/logout_user.dart';
 import 'package:es_control_app/util/question_validator.dart';
@@ -109,12 +110,12 @@ class SurveyPageState extends State<SurveyPage> {
                   widget.survey.name,
                 ),
               ),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () {
-                  createNewFormLayout(context);
-                },
-                child: Icon(Icons.add),
-              ),
+//              floatingActionButton: FloatingActionButton(
+//                onPressed: () {
+//                  createNewFormLayout(context);
+//                },
+//                child: Icon(Icons.add),
+//              ),
               body: Stack(
                 children: <Widget>[
                   Column(children: <Widget>[
@@ -125,8 +126,8 @@ class SurveyPageState extends State<SurveyPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
                             ListTile(
-                              title:
-                              Text("You have ${surveyResponses.length} forms at the moment."),
+                              title: Text(
+                                  "You have ${surveyResponses.length} forms at the moment."),
                             )
                           ],
                         ),
@@ -175,7 +176,7 @@ class SurveyPageState extends State<SurveyPage> {
         surveyFormSelected(context, surveyResponse);
       },
       surveyResponse: surveyResponse,
-      key: Key(surveyResponse.uniqueId) ,
+      key: Key(surveyResponse.uniqueId),
     );
   }
 
@@ -200,7 +201,7 @@ class SurveyPageState extends State<SurveyPage> {
       surveyResponse.createdOn = DateTime.now();
       surveyResponse.formName = text;
       surveyResponse.uploaded = false;
-      String username = await FileStorage.readUsername();
+      String username = await Preferences.readUsername();
       surveyResponse.username = username;
       surveyResponse.active = true;
       await DBProvider.db.createSurveyResponse(surveyResponse);
@@ -288,9 +289,10 @@ class SurveyPageState extends State<SurveyPage> {
               color: Colors.green[800],
               offset: Offset(0.0, 2.0),
               blurRadius: 3.0,
-            )],
+            )
+          ],
         )..show(context);
-      } else if(responseCode==-2){
+      } else if (responseCode == -2) {
         logoutUser(context);
       } else {
         Flushbar(
@@ -305,11 +307,12 @@ class SurveyPageState extends State<SurveyPage> {
             colors: [Colors.red[400], Colors.red[600]],
           ),
           boxShadows: <BoxShadow>[
-          BoxShadow(
-            color: Colors.red[800],
-            offset: Offset(0.0, 2.0),
-            blurRadius: 3.0,
-          )],
+            BoxShadow(
+              color: Colors.red[800],
+              offset: Offset(0.0, 2.0),
+              blurRadius: 3.0,
+            )
+          ],
         )..show(context);
       }
       toggleProgressHUD();
@@ -343,10 +346,36 @@ class SurveyPageState extends State<SurveyPage> {
                       'Upload',
                       style: TextStyle(fontSize: 20, color: Colors.white),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       toggleProgressHUD();
-                      uploadForm(callback);
-                      Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                      ConnectivityResult connectivityResult =
+                          await (Connectivity().checkConnectivity());
+                      if (connectivityResult == ConnectivityResult.mobile ||
+                          connectivityResult == ConnectivityResult.wifi) {
+                        uploadForm(callback);
+                        Navigator.of(context).pop(ConfirmAction.ACCEPT);
+                      }else{
+                        Flushbar(
+                          duration: Duration(seconds: 8),
+                          flushbarPosition: FlushbarPosition.TOP,
+                          flushbarStyle: FlushbarStyle.FLOATING,
+                          isDismissible: true,
+                          dismissDirection: FlushbarDismissDirection.HORIZONTAL,
+                          title: "No connection.",
+                          message: "We could not find an internet connection to use.",
+                          backgroundGradient: LinearGradient(
+                            colors: [Colors.red[400], Colors.red[600]],
+                          ),
+                          boxShadows: <BoxShadow>[
+                            BoxShadow(
+                              color: Colors.red[800],
+                              offset: Offset(0.0, 2.0),
+                              blurRadius: 3.0,
+                            )
+                          ],
+                        )..show(context);
+                        toggleProgressHUD();
+                      }
                     },
                   )
                 ],
@@ -404,6 +433,9 @@ class SurveyPageState extends State<SurveyPage> {
   }
 
   Future<int> uploadSurveyResponse(String surveyResponseUniqueId) async {
-    return await RestApi().uploadSurveyResponse(surveyResponseUniqueId);
+    int responseCode =
+        await RestApi().uploadSurveyResponse(surveyResponseUniqueId);
+
+    return responseCode;
   }
 }

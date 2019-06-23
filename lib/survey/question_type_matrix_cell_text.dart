@@ -3,6 +3,7 @@ import 'package:es_control_app/model/survey_question_model.dart';
 import 'package:es_control_app/model/survey_response_answer_model.dart';
 import 'package:es_control_app/model/survey_response_model.dart';
 import 'package:es_control_app/repository/db_provider.dart';
+import 'package:es_control_app/util/matrix_column_types.dart';
 import 'package:flutter/material.dart';
 
 class MatrixCellText extends StatefulWidget {
@@ -59,10 +60,10 @@ class MatrixCellTextState extends State<MatrixCellText> {
     retrieveSurveyResponseAnswerChoice() async {
       surveyResponseAnswer = await DBProvider.db
           .getSurveyResponseAnswerChoiceForMatrixCellTextByResponseAndQuestion(
-              widget.surveyResponse.uniqueId,
-              widget.surveyQuestion.id,
-              widget.surveyQuestionAnswerChoiceRow.id,
-              widget.surveyQuestionAnswerChoiceColumn.id);
+          widget.surveyResponse.uniqueId,
+          widget.surveyQuestion.id,
+          widget.surveyQuestionAnswerChoiceRow.id,
+          widget.surveyQuestionAnswerChoiceColumn.id);
       if (surveyResponseAnswer != null) {
         oldValue = surveyResponseAnswer.responseText;
         textEditingController.text = oldValue;
@@ -92,7 +93,8 @@ class MatrixCellTextState extends State<MatrixCellText> {
           widget.surveyQuestion.id,
           oldValue,
           widget.surveyQuestionAnswerChoiceRow.id,
-          widget.surveyQuestionAnswerChoiceColumn.id);
+          widget.surveyQuestionAnswerChoiceColumn.id,
+          text);
     }
   }
 }
