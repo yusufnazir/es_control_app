@@ -49,7 +49,7 @@ class QuestionValidator {
           madeRequiredGroupList.contains(surveyQuestion.groupId)) {
         required = true;
       }
-      debugPrint("surveyQuestion ${surveyQuestion.id} groupid ${surveyQuestion.groupId}");
+//      debugPrint("surveyQuestion ${surveyQuestion.id} groupid ${surveyQuestion.groupId}");
       if (required) {
         String questionType = surveyQuestion.questionType;
         switch (questionType) {

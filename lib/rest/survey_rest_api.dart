@@ -107,6 +107,7 @@ class RestApi {
 
   List<SurveyRestModel> parseSurveys(String responseBody) {
     var decode = json.decode(responseBody);
+    print(decode);
     return decode
         .map<SurveyRestModel>((value) => SurveyRestModel.fromMap(value))
         .toList();
@@ -123,7 +124,7 @@ class RestApi {
 
   manageSurveyResponses(List<SurveyResponseRestModel> surveyResponses) async {
     if (surveyResponses != null) {
-      debugPrint("surveyResponses $surveyResponses");
+//      debugPrint("surveyResponses $surveyResponses");
       for (SurveyResponseRestModel surveyResponseRestModel in surveyResponses) {
         SurveyResponse surveyResponse = surveyResponseRestModel.surveyResponse;
 

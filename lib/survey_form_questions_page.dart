@@ -4,6 +4,7 @@ import 'package:es_control_app/model/survey_model.dart';
 import 'package:es_control_app/model/survey_section_model.dart';
 import 'package:es_control_app/survey/question_generator.dart';
 import 'package:es_control_app/util/question_validator.dart';
+import 'package:es_control_app/widgets/page_viewer_navigation_bar.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ class SurveyFormQuestionsPage extends StatefulWidget {
   }
 }
 
-class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
+class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> with RouteAware{
   GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
 
   List<SurveyQuestion> surveyQuestions = List<SurveyQuestion>();
@@ -38,6 +39,9 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   var drawerQuestionListing;
   int requiredQuestionId;
   SurveyQuestion surveyQuestionRequired;
+  bool prevVisible = true;
+  bool nextVisible = true;
+  int surveySectionsCount = 0;
 
   SurveyFormQuestionsPageState();
 
@@ -53,7 +57,41 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
   }
 
   @override
+  void dispose() {
+    RouteObserver().unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    RouteObserver().subscribe(this, ModalRoute.of(context));
+  }
+
+  // Called when the top route has been popped off, and the current route shows up.
+  void didPopNext() {
+//    debugPrint("didPopNext ${runtimeType}");
+  }
+
+  // Called when the current route has been pushed.
+  void didPush() {
+    FocusScope.of(context).requestFocus(new FocusNode());
+//    debugPrint("didPush ${runtimeType}");
+  }
+
+  // Called when the current route has been popped off.
+  void didPop() {
+//    debugPrint("didPop ${runtimeType}");
+  }
+
+  // Called when a new route has been pushed, and the current route is no longer visible.
+  void didPushNext() {
+//    debugPrint("didPushNext ${runtimeType}");
+  }
+
+  @override
   Widget build(BuildContext context) {
+//    debugPrint("building layout");
     return new Scaffold(
         key: _scaffoldKey,
         endDrawer: Drawer(
@@ -99,6 +137,11 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
                 itemBuilder: (BuildContext context, int position) {
                   SurveySection surveySection =
                       surveySections == null ? null : surveySections[position];
+                  if (position == 0) {
+                    prevVisible = false;
+                  } else {
+                    prevVisible = true;
+                  }
                   return QuestionGeneratorWidget(
                       widget.surveyResponse,
                       questionsBySectionMap[
@@ -108,33 +151,22 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
                 },
               ),
             ),
-            Container(
-              color: Theme.of(context).primaryColorLight,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  FlatButton(
-                    child: Text('Prev'),
-                    onPressed: () {
-                      SystemChannels.textInput.invokeMethod('TextInput.hide');
-                      _preLoadController.previousPage(
-                          duration: _kDuration, curve: _kCurve);
-                      requiredQuestionId = null;
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('Next'),
-                    onPressed: () {
-                      SystemChannels.textInput.invokeMethod('TextInput.hide');
-                      _preLoadController.nextPage(
-                          duration: _kDuration, curve: _kCurve);
-                      requiredQuestionId = null;
-                    },
-                  )
-                ],
-              ),
-            )
+            PageViewerNavigationBar(
+              nextHandler: () {
+                SystemChannels.textInput.invokeMethod('TextInput.hide');
+                _preLoadController.nextPage(
+                    duration: _kDuration, curve: _kCurve);
+                requiredQuestionId = null;
+              },
+              previousHandler: () {
+                SystemChannels.textInput.invokeMethod('TextInput.hide');
+                _preLoadController.previousPage(
+                    duration: _kDuration, curve: _kCurve);
+                requiredQuestionId = null;
+              },
+              preloadPageController: _preLoadController,
+              totalPages: surveySections.length,
+            ),
           ],
         ));
   }
@@ -151,6 +183,8 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
           await DBProvider.db.getSurveySection(sectionId);
       surveySections.add(surveySection);
     }
+
+    surveySectionsCount = surveySections.length;
     setState(() {
       surveyQuestions.addAll(questions);
     });
@@ -214,11 +248,6 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
     return futureBuilder;
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void validateResponseAnswers(BuildContext context) async {
     FocusScope.of(context).requestFocus(new FocusNode());
 
@@ -257,11 +286,12 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
             "Please review the following question: ${surveyQuestionRequired.question}",
         backgroundColor: Colors.red,
         boxShadows: <BoxShadow>[
-        BoxShadow(
-          color: Colors.red[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        )],
+          BoxShadow(
+            color: Colors.red[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
       surveyQuestionRequired = null;
     } else {
@@ -277,11 +307,12 @@ class SurveyFormQuestionsPageState extends State<SurveyFormQuestionsPage> {
           colors: [Constants.primaryColorLight, Constants.primaryColor],
         ),
         boxShadows: <BoxShadow>[
-        BoxShadow(
-          color: Colors.green[800],
-          offset: Offset(0.0, 2.0),
-          blurRadius: 3.0,
-        )],
+          BoxShadow(
+            color: Colors.green[800],
+            offset: Offset(0.0, 2.0),
+            blurRadius: 3.0,
+          )
+        ],
       )..show(context);
 //      final snackBar = SnackBar(
 //        content: Text('All required questions have been filled.'),

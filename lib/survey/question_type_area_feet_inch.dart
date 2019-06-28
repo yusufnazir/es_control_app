@@ -337,7 +337,7 @@ class QuestionTypeAreaFtInchState extends State<QuestionTypeAreaFtInch> {
           widget.surveyQuestion.id,
           decimalValue);
     } else if (oldWidthInchValue.compareTo(widthInch) != 0) {
-      debugPrint("oldWidthInchValue $oldWidthInchValue widthInch $widthInch");
+//      debugPrint("oldWidthInchValue $oldWidthInchValue widthInch $widthInch");
       oldWidthInchValue = widthInch;
       DBProvider.db.updateSurveyResponseAnswerForSingleText(
           widget.surveyResponse.uniqueId,

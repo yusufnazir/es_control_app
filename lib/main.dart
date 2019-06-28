@@ -1,14 +1,16 @@
 // This sample shows adding an action to an [AppBar] that opens a shopping cart.
 
 import 'package:es_control_app/constants.dart';
-import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/home.dart';
 import 'package:es_control_app/l10n/localizations.dart';
 import 'package:es_control_app/login/login_page.dart';
+import 'package:es_control_app/preferences.dart';
 import 'package:es_control_app/surveys_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+final RouteObserver<PageRoute> routeObserver = new RouteObserver<PageRoute>();
 
 void main() {
   ThemeData _buildShrineTheme() {
@@ -34,6 +36,7 @@ void main() {
   final ThemeData _kShrineTheme = _buildShrineTheme();
 
   runApp(new MaterialApp(
+    navigatorObservers: <NavigatorObserver>[routeObserver],
     localizationsDelegates: [
       AppLocalizationsDelegate(),
       GlobalMaterialLocalizations.delegate,
@@ -61,6 +64,11 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: toLoginOrNot(),
@@ -70,7 +78,9 @@ class _MyAppState extends State<MyApp> {
           } else {
             return Scaffold(
                 backgroundColor: Colors.white,
-                body:Center(child: Image.asset('images/es_controls.jpg'),) );
+                body: Center(
+                  child: Image.asset('images/es_controls.jpg'),
+                ));
           }
         });
   }

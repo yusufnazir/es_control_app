@@ -82,10 +82,14 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
     );
 
     focusNode.addListener(() {
+      debugPrint("listener triggered");
       if (focusNode.hasFocus) {
+        debugPrint("has focus");
         focussed = true;
       }
+      debugPrint("focus? ${focusNode.hasFocus} focuessed? $focussed");
       if (!focusNode.hasFocus && focussed) {
+        debugPrint("text? ${textEditingController.text}");
         _updateText(textEditingController.text);
       }
     });
@@ -118,7 +122,7 @@ class QuestionTypeSingleState extends State<QuestionTypeSingle> {
       }
       bool isDependant = await DBProvider.db
           .isSurveyQuestionDependant(widget.surveyQuestion.id);
-      if(widget.surveyQuestion.groupId!=null){
+      if (widget.surveyQuestion.groupId != null) {
         isDependant = true;
       }
       return isDependant;

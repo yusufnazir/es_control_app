@@ -32,7 +32,7 @@ class _BlinkingButtonState extends State<BlinkingButton>
       child: Row(
         children: <Widget>[
           Text(
-            "Scroll for more",
+            "Scroll in table for more",
             style: TextStyle(color: Constants.primaryColor),
           ),
           Icon(

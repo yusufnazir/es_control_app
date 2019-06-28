@@ -492,11 +492,11 @@ class DBProvider {
     List<SurveyQuestionUser> list = res.isNotEmpty
         ? res.map((c) => SurveyQuestionUser.fromDbMap(c)).toList()
         : [];
-    debugPrint("surveyquestionusers $list");
+//    debugPrint("surveyquestionusers $list");
     List<int> questionIds = list
         .map((surveyQuestionUser) => surveyQuestionUser.questionId)
         .toList();
-    debugPrint("questionids $questionIds");
+//    debugPrint("questionids $questionIds");
     res = await db.query(SurveyQuestion.tableSurveyQuestions,
         where:
             "${SurveyQuestion.columnSurveyId}= ? and ${SurveyQuestion.columnId} in (${questionIds.join(',')})",
@@ -1257,7 +1257,7 @@ class DBProvider {
         where: "${SurveyResponseSection.columnSurveyResponseUniqueId}=? "
             "and ${SurveyResponseSection.columnNotApplicable} = ?",
         whereArgs: [surveyResponseUniqueId, 1]);
-    debugPrint("res $res");
+//    debugPrint("res $res");
 
     List<SurveyResponseSection> list = res.isNotEmpty
         ? res.map((c) => SurveyResponseSection.fromDbMap(c)).toList()
@@ -1273,7 +1273,7 @@ class DBProvider {
             "and ${SurveyResponseSection.columnNotApplicable} = ?",
         whereArgs: [surveyResponseUniqueId, 1],
         columns: [SurveyResponseSection.columnSurveySectionId]);
-    debugPrint("res $res");
+//    debugPrint("res $res");
 
     return res.isNotEmpty
         ? res
@@ -1332,5 +1332,15 @@ class DBProvider {
     await db
         .rawDelete("Delete from ${SurveyQuestionUser.tableSurveyQuestionUsers} "
             "where ${SurveyQuestionUser.columnSurveyId} = $surveyId");
+  }
+
+  removeAllFormData(String surveyResponseUniqueId) async {
+    final db = await database;
+    await db.rawDelete(
+        "Delete from ${SurveyResponseAnswer.tableSurveyResponseAnswers} "
+        "where ${SurveyResponseAnswer.columnSurveyResponseUniqueId} = '$surveyResponseUniqueId'");
+    await db.rawDelete(
+        "Delete from ${SurveyResponseSection.tableSurveyResponseSections} "
+        "where ${SurveyResponseSection.columnSurveyResponseUniqueId} = '$surveyResponseUniqueId'");
   }
 }
